@@ -13,91 +13,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. جلب الكود المصدري
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # 2. إعداد جافا 17 (مطلوب لأندرويد 13)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. إعداد Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 4. تثبيت كوردوفا
       - name: Install Cordova
         run: npm install -g cordova
 
-      # 5. خطوة الإصلاح الذكي (Smart Fix) - الأهم
-      # نستخدم سكربت Node.js لتنظيف ملف package.json برمجياً
-      # هذا يضمن 100% عدم فساد الملف (JSON Error)
-      - name: Clean package.json safely
+      # هذه الخطوة المجمعة ستحل المشكلة بطريقة يدوية مضمونة
+      - name: Fix Dependencies & Build
         run: |
-          # حذف الملفات المؤقتة القديمة
+          # 1. تنظيف البيئة تماماً
           rm -rf node_modules package-lock.json plugins platforms
           
-          # سكربت جافاسكريبت صغير لتعديل ملف الباكيج بأمان تام
+          # 2. إصلاح package.json (حذف الإضافة المعطوبة برمجياً لمنع أخطاء JSON)
           node -e "
             const fs = require('fs');
-            try {
-              // قراءة الملف
-              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              
-              // حذف الإضافة القديمة من القائمة تماماً
-              if (pkg.dependencies) {
-                delete pkg.dependencies['cordova-plugin-local-notification'];
-              }
-              if (pkg.cordova && pkg.cordova.plugins) {
-                delete pkg.cordova.plugins['cordova-plugin-local-notification'];
-              }
-              
-              // حفظ الملف نظيفاً وسليماً
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-              console.log('Successfully cleaned package.json');
-            } catch (e) {
-              console.error('Error cleaning package.json:', e);
-              process.exit(1);
-            }
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
+            if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           "
-
-      # 6. التأكد من المجلدات
-      - name: Prepare Directories
-        run: |
-          # التأكد من وجود مجلد www
-          if [ ! -d "www" ]; then
-            mkdir www
-            echo "Created missing www directory"
-          fi
           
-          # إنشاء مجلد الأيقونات لتجنب توقف البناء
+          # 3. التأكد من وجود مجلد www
+          mkdir -p www
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      # 7. تثبيت المكتبات الأساسية (الآن الملف نظيف ولن يحدث خطأ)
-      - name: Install Base Dependencies
-        run: npm install
+          # 4. تثبيت المكتبات الأساسية (الآن سينجح لأننا حذفنا الإضافة السيئة)
+          npm install
 
-      # 8. تثبيت إضافة الإشعارات الصحيحة يدوياً
-      # استخدام https مباشرة يمنع مشاكل SSH
-      - name: Install Fixed Notification Plugin
-        run: cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git --save
+          # 5. الحل السحري: تحميل الإضافة يدوياً باستخدام git clone
+          # هذا يتجاوز مشاكل كوردوفا في التحميل
+          echo "Cloning plugin manually..."
+          git clone https://github.com/timbrussel/cordova-plugin-local-notifications.git local-plugin-fix
 
-      # 9. إضافة منصة أندرويد
-      - name: Add Android Platform
-        run: cordova platform add android@13.0.0 --force
+          # 6. تثبيت الإضافة من المجلد المحلي الذي حملناه
+          echo "Installing plugin from local folder..."
+          cordova plugin add ./local-plugin-fix --save
 
-      # 10. بناء التطبيق مع تفعيل التوافقية (AndroidX)
-      - name: Build APK
-        run: |
+          # 7. إضافة منصة أندرويد
+          cordova platform add android@13.0.0 --force
+
+          # 8. بناء التطبيق
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
 
-      # 11. رفع الملف النهائي
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
