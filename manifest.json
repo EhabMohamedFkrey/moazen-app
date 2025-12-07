@@ -1,7 +1,7 @@
 {
   "name": "المؤذن",
   "short_name": "المؤذن",
-  "start_url": "./index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#141E30",
   "theme_color": "#d4af37",
