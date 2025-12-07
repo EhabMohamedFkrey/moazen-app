@@ -1,0 +1,30 @@
+{
+  "packageId": "com.moazen.app",
+  "host": "moazen-app.netlify.app",
+  "name": "المؤذن",
+  "launcherName": "المؤذن",
+  "display": "standalone",
+  "themeColor": "#d4af37",
+  "navigationColor": "#141E30",
+  "backgroundColor": "#141E30",
+  "startUrl": "/",
+  "iconUrl": "https://cdn-icons-png.flaticon.com/512/4358/4358666.png",
+  "maskableIconUrl": "https://cdn-icons-png.flaticon.com/512/4358/4358666.png",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "./manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": false
+    },
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableNotifications": true
+}

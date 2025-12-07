@@ -1,0 +1,48 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Setup Java (JDK)
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Bubblewrap CLI
+      run: npm install -g @bubblewrap/cli
+
+    - name: Initialize Android Project
+      run: |
+        # إنشاء ملف مفاتيح توقيع مؤقت (لأغراض التطوير)
+        keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
+        
+        # بناء مشروع الأندرويد باستخدام الإعدادات
+        bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+
+    - name: Sign APK
+      run: |
+        # توقيع التطبيق بالمفتاح المؤقت
+        jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: moazen-app-apk
+        path: app-release-signed.apk

@@ -1,0 +1,19 @@
+{
+  "name": "المؤذن",
+  "short_name": "المؤذن",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#141E30",
+  "theme_color": "#d4af37",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+

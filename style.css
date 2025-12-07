@@ -1,0 +1,1197 @@
+:root { --nav-height: 70px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body {
+            height: 100vh;
+            background-color: var(--bg-color);
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Tajawal', sans-serif;
+            overflow: hidden;
+            padding-bottom: var(--nav-height);
+        }
+
+        /* === الثيمات === */
+        [data-theme="kaaba"] { --bg-color: #000; --bg-image: radial-gradient(circle, #2b2b2b, #000); --card-bg: rgba(20,20,20,0.95); --text-color: #fff; --accent: #d4af37; --clock-face: #111; --select-bg: rgba(30,30,30,0.9); }
+        [data-theme="medina"] { --bg-color: #134E5E; --bg-image: linear-gradient(135deg, #134E5E, #71B280); --card-bg: rgba(255,255,255,0.15); --text-color: #fff; --accent: #a8ff78; --clock-face: rgba(0,0,0,0.2); --select-bg: rgba(255,255,255,0.2); }
+        [data-theme="royal"] { --bg-color: #141E30; --bg-image: linear-gradient(to right, #0f0c29, #302b63, #24243e); --card-bg: rgba(255,255,255,0.05); --text-color: #fff; --accent: #00d2ff; --clock-face: rgba(0,0,0,0.3); --select-bg: rgba(255,255,255,0.1); }
+        [data-theme="paper"] { --bg-color: #f5f5f5; --bg-image: none; --card-bg: #ffffff; --text-color: #333; --accent: #b8860b; --clock-face: #eee; --select-bg: #fff; }
+        [data-theme="midnight"] { --bg-color: #000; --bg-image: linear-gradient(to bottom, #000000, #151515); --card-bg: #1a1a1a; --text-color: #ddd; --accent: #ff4081; --clock-face: #222; --select-bg: #2a2a2a; }
+        [data-theme="nature"] { --bg-color: #0d3b2a; --bg-image: linear-gradient(135deg, #0d3b2a, #1b5e3e); --card-bg: rgba(255,255,255,0.1); --text-color: #fff; --accent: #4caf50; --clock-face: rgba(0,0,0,0.2); --select-bg: rgba(255,255,255,0.15); }
+        [data-theme="ramadan"] { --bg-color: #1a237e; --bg-image: linear-gradient(135deg, #1a237e, #4a148c); --card-bg: rgba(255,255,255,0.1); --text-color: #fff; --accent: #ffd700; --clock-face: rgba(0,0,0,0.3); --select-bg: rgba(255,255,255,0.15); }
+        [data-theme="hajj"] { --bg-color: #8B0000; --bg-image: linear-gradient(135deg, #8B0000, #B22222); --card-bg: rgba(255,255,255,0.1); --text-color: #fff; --accent: #f0e68c; --clock-face: rgba(0,0,0,0.3); --select-bg: rgba(255,255,255,0.15); }
+        [data-theme="sunset"] { --bg-color: #FF512F; --bg-image: linear-gradient(to right, #FF512F, #F09819); --card-bg: rgba(255,255,255,0.15); --text-color: #fff; --accent: #FFD700; --clock-face: rgba(0,0,0,0.2); --select-bg: rgba(255,255,255,0.2); }
+        [data-theme="ocean"] { --bg-color: #2193b0; --bg-image: linear-gradient(to right, #2193b0, #6dd5ed); --card-bg: rgba(255,255,255,0.15); --text-color: #fff; --accent: #00FFAB; --clock-face: rgba(0,0,0,0.2); --select-bg: rgba(255,255,255,0.2); }
+        [data-theme="desert"] { --bg-color: #C02425; --bg-image: linear-gradient(to right, #C02425, #F0CB35); --card-bg: rgba(255,255,255,0.15); --text-color: #fff; --accent: #FFD700; --clock-face: rgba(0,0,0,0.2); --select-bg: rgba(255,255,255,0.2); }
+        [data-theme="golden"] { --bg-color: #0A0A0A; --bg-image: linear-gradient(135deg, #0A0A0A, #1A1A1A, #2A2A2A); --card-bg: rgba(218, 165, 32, 0.1); --text-color: #FFD700; --accent: #FFD700; --clock-face: rgba(218, 165, 32, 0.2); --select-bg: rgba(218, 165, 32, 0.15); }
+        [data-theme="sky"] { --bg-color: #87CEEB; --bg-image: linear-gradient(135deg, #87CEEB, #B0E0E6, #E0FFFF); --card-bg: rgba(255, 255, 255, 0.2); --text-color: #1E3A8A; --accent: #1E3A8A; --clock-face: rgba(255, 255, 255, 0.3); --select-bg: rgba(255, 255, 255, 0.25); }
+        [data-theme="purple-rain"] { --bg-color: #4B0082; --bg-image: linear-gradient(135deg, #4B0082, #8A2BE2, #9370DB); --card-bg: rgba(147, 112, 219, 0.15); --text-color: #E6E6FA; --accent: #DA70D6; --clock-face: rgba(218, 112, 214, 0.2); --select-bg: rgba(218, 112, 214, 0.15); }
+
+        .pattern-overlay {
+            position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        [data-theme="paper"] .pattern-overlay { filter: invert(1); opacity: 0.03; }
+
+        .app-shell {
+            display: flex; flex-direction: column; height: 100%;
+            max-width: 500px; margin: 0 auto; background: rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .page-container {
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px;
+            scroll-behavior: smooth;
+        }
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dashboard-header {
+            background: var(--card-bg); border-radius: 20px; padding: 15px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.05);
+        }
+        [data-theme="paper"] .dashboard-header { border: 1px solid rgba(0,0,0,0.05); }
+
+        .weather-info {
+            display: flex; align-items: center; gap: 8px; font-size: 0.9rem;
+            margin-top: 5px; opacity: 0.9;
+        }
+        .weather-temp { font-weight: bold; color: var(--accent); }
+
+        .analog-clock {
+            width: 80px; height: 80px; background: var(--clock-face); border-radius: 50%;
+            border: 3px solid var(--accent); position: relative; flex-shrink: 0;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .analog-clock::before { content: ''; position: absolute; width: 6px; height: 6px; background: var(--text-color); border-radius: 50%; z-index: 10; }
+        .hand { position: absolute; bottom: 50%; transform-origin: bottom; border-radius: 4px; z-index: 5; }
+        .hour { width: 3px; height: 22px; background: var(--text-color); }
+        .min { width: 2px; height: 30px; background: var(--text-color); opacity: 0.8; }
+        .sec { width: 1px; height: 35px; background: var(--accent); }
+
+        .clock-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .digital-time {
+            font-size: 2rem; font-family: 'Cairo'; font-weight: 700;
+            line-height: 1; color: var(--accent); direction: ltr; text-align: right; margin-bottom: 5px;
+        }
+        .date-row { font-size: 0.8rem; opacity: 0.8; display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        .date-icon { width: 14px; text-align: center; color: var(--accent); }
+
+        .main-circle {
+            width: 100%; padding: 15px; margin-bottom: 20px;
+            border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);
+            background: var(--card-bg); text-align: center;
+        }
+        [data-theme="paper"] .main-circle { border: 1px solid rgba(0,0,0,0.05); }
+
+        .next-label { font-size: 0.9rem; opacity: 0.8; }
+        .next-name { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+        .countdown { 
+            font-size: 2.2rem; font-family: 'Cairo'; font-weight: 700; direction: ltr; 
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.8; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.02); }
+        }
+
+        .prayer-row {
+            background: var(--card-bg); padding: 12px 15px; margin-bottom: 8px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-right: 3px solid transparent; transition: 0.3s;
+        }
+        .prayer-row.active { background: var(--accent); color: var(--bg-color); border-right: 5px solid var(--text-color); transform: scale(1.02); font-weight: bold; }
+        [data-theme="paper"] .prayer-row.active { color: #fff; border-right-color: #333; }
+        [data-theme="kaaba"] .prayer-row.active { color: #000; border-right-color: #fff; }
+
+        .calendar-wrapper { 
+            overflow-x: auto; -webkit-overflow-scrolling: touch; 
+            background: var(--card-bg); border-radius: 15px; padding: 10px;
+            margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .cal-table { 
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 0.9rem; text-align: center; min-width: 400px;
+        }
+        .cal-table th { 
+            background: rgba(255,255,255,0.1); color: var(--accent); 
+            padding: 12px 8px; font-weight: bold; border-bottom: 2px solid var(--accent);
+            position: sticky; top: 0; z-index: 10;
+        }
+        [data-theme="paper"] .cal-table th { background: rgba(0,0,0,0.05); }
+        
+        .cal-table td { 
+            padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-family: 'Cairo', sans-serif; transition: 0.2s;
+        }
+        [data-theme="paper"] .cal-table td { border-bottom: 1px solid rgba(0,0,0,0.05); }
+        
+        .cal-table tr:hover td { background: rgba(255,255,255,0.05); }
+        [data-theme="paper"] .cal-table tr:hover td { background: rgba(0,0,0,0.03); }
+        
+        .today-row { background: var(--accent); color: var(--bg-color); font-weight: bold; }
+        .today-row td { border-radius: 5px; }
+
+        .btn-outline {
+            background: transparent; border: 2px solid var(--accent); color: var(--text-color);
+            padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-outline:active { background: var(--accent); color: var(--bg-color); }
+
+        .compass-container {
+            text-align: center; padding: 20px;
+        }
+        .compass-ring { 
+            width: 250px; height: 250px; border: 5px solid var(--accent); border-radius: 50%; 
+            margin: 20px auto; position: relative; transition: transform 0.1s; 
+            background: rgba(0,0,0,0.1);
+        }
+        .kaaba-icon { 
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); 
+            font-size: 40px; color: #d4af37; z-index: 5;
+        }
+        .compass-arrow { 
+            position: absolute; top: 50%; left: 50%; transform-origin: center;
+            width: 4px; height: 100px; background: var(--accent);
+            transform: translate(-50%, -100%) rotate(0deg);
+            border-radius: 2px;
+        }
+        .compass-arrow::after {
+            content: ''; position: absolute; top: -10px; left: -8px;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 15px solid var(--accent);
+        }
+        
+        .tasbih-container {
+            text-align: center; padding: 20px;
+        }
+        .dhikr-selector {
+            background: var(--select-bg); border: 2px solid var(--accent);
+            color: var(--text-color); padding: 10px 15px;
+            border-radius: 12px; font-family: 'Tajawal';
+            width: 100%; margin-bottom: 20px; font-size: 1rem;
+        }
+        .dhikr-selector option {
+            background: var(--card-bg); color: var(--text-color);
+        }
+        .dhikr-display {
+            font-size: 1.5rem; margin: 20px 0; padding: 15px;
+            background: var(--card-bg); border-radius: 15px;
+            min-height: 80px; display: flex; align-items: center; justify-content: center;
+        }
+        .tasbih-btn {
+            width: 200px; height: 200px; border-radius: 50%; background: var(--card-bg);
+            border: 5px solid var(--accent); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; margin: 20px auto;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .tasbih-btn:active { transform: scale(0.95); }
+        .count-display { font-size: 4rem; font-weight: bold; font-family: 'Cairo'; color: var(--text-color); }
+        .dhikr-controls {
+            display: flex; justify-content: center; gap: 10px; margin-top: 20px;
+        }
+        
+        .events-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px; margin-top: 20px;
+        }
+        .event-card {
+            background: var(--card-bg); border-radius: 15px; padding: 15px;
+            border-left: 5px solid var(--accent); transition: transform 0.2s;
+        }
+        .event-card:hover { transform: translateY(-5px); }
+        .event-date { 
+            color: var(--accent); font-weight: bold; margin-bottom: 5px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .event-title { font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; }
+        .event-desc { font-size: 0.9rem; opacity: 0.9; }
+        .event-important { border-left-color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+        .event-eid { border-left-color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+        .event-ramadan { border-left-color: #00bcd4; background: rgba(0, 188, 212, 0.1); }
+        
+        .ramadan-banner {
+            background: linear-gradient(135deg, #1a237e, #4a148c);
+            color: white; padding: 15px; border-radius: 15px;
+            margin-bottom: 20px; text-align: center;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        
+        .greeting-card-creator {
+            padding: 20px;
+        }
+        
+        .card-preview-container {
+            position: relative; width: 100%; height: 300px; 
+            margin: 20px auto; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 3px solid var(--accent);
+        }
+        
+        .card-background {
+            width: 100%; height: 100%; position: absolute;
+            background-size: cover; background-position: center;
+        }
+        
+        .card-content {
+            position: absolute; inset: 0; 
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
+            color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .card-logo {
+            width: 80px; height: 80px; margin-bottom: 15px;
+            border-radius: 50%; border: 3px solid gold;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.2); font-size: 2rem;
+        }
+        
+        .card-name {
+            font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;
+        }
+        
+        .card-message {
+            font-size: 1.1rem; margin-top: 10px; font-family: 'Amiri';
+            max-width: 80%;
+        }
+        
+        .background-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin: 20px 0;
+        }
+        
+        .bg-thumbnail {
+            width: 100%; height: 80px; border-radius: 8px;
+            cursor: pointer; border: 2px solid transparent;
+            transition: 0.2s; background-size: cover; background-position: center;
+        }
+        
+        .bg-thumbnail.active { border-color: var(--accent); transform: scale(1.05); }
+        
+        .card-controls {
+            display: flex; flex-direction: column; gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .card-input {
+            background: var(--card-bg); border: 2px solid var(--accent);
+            color: var(--text-color); padding: 12px 15px;
+            border-radius: 10px; font-family: 'Tajawal';
+            width: 100%; font-size: 1rem;
+        }
+        
+        .card-buttons {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        
+        .quran-container {
+            padding: 20px;
+        }
+        
+        .surah-list {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px; margin-top: 20px;
+        }
+        
+        .surah-card {
+            background: var(--card-bg); border-radius: 10px; padding: 15px;
+            text-align: center; cursor: pointer; transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .surah-card:hover { transform: translateY(-5px); }
+        
+        .surah-number {
+            width: 30px; height: 30px; background: var(--accent);
+            color: var(--bg-color); border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        
+        .surah-name { font-weight: bold; margin-bottom: 5px; }
+        
+        .surah-info { font-size: 0.8rem; opacity: 0.8; }
+        
+        .ayah-player {
+            background: var(--card-bg); border-radius: 15px; padding: 20px;
+            margin-top: 20px; text-align: center;
+        }
+        
+        .player-controls {
+            display: flex; justify-content: center; gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .dua-container {
+            padding: 20px;
+        }
+        
+        .dua-categories {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .dua-category {
+            background: var(--card-bg); padding: 10px 15px;
+            border-radius: 20px; cursor: pointer; transition: 0.2s;
+            font-size: 0.9rem; border: 1px solid transparent;
+        }
+        
+        .dua-category.active { background: var(--accent); color: var(--bg-color); }
+        
+        .dua-card {
+            background: var(--card-bg); border-radius: 15px; padding: 20px;
+            margin-bottom: 15px; border-right: 5px solid var(--accent);
+        }
+        
+        .dua-text { font-size: 1.2rem; margin-bottom: 10px; font-family: 'Amiri'; }
+        
+        .dua-translation { font-size: 0.9rem; opacity: 0.8; margin-top: 10px; }
+        
+        .mosques-container {
+            padding: 20px;
+        }
+        
+        .mosque-card {
+            background: var(--card-bg); border-radius: 15px; padding: 15px;
+            margin-bottom: 15px; display: flex; align-items: center;
+            gap: 15px;
+        }
+        
+        .mosque-icon {
+            width: 50px; height: 50px; background: var(--accent);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem;
+        }
+        
+        .mosque-info { flex: 1; }
+        
+        .mosque-name { font-weight: bold; margin-bottom: 5px; }
+        
+        .mosque-distance { font-size: 0.8rem; opacity: 0.8; }
+        
+        .quiz-container {
+            padding: 20px;
+        }
+        
+        .quiz-card {
+            background: var(--card-bg); border-radius: 15px; padding: 20px;
+            margin-bottom: 20px; text-align: center;
+        }
+        
+        .quiz-question {
+            font-size: 1.2rem; margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .quiz-options {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        
+        .quiz-option {
+            background: rgba(255,255,255,0.1); padding: 15px;
+            border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        
+        .quiz-option:hover { background: rgba(255,255,255,0.2); }
+        
+        .quiz-option.correct { background: #4CAF50; color: white; }
+        
+        .quiz-option.wrong { background: #f44336; color: white; }
+        
+        .quiz-score {
+            font-size: 1.5rem; font-weight: bold; color: var(--accent);
+            text-align: center; margin-top: 20px;
+        }
+        
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height);
+            background: var(--card-bg); backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        }
+        [data-theme="paper"] .bottom-nav { border-top: 1px solid rgba(0,0,0,0.1); }
+        .nav-item { 
+            display: flex; flex-direction: column; align-items: center; 
+            opacity: 0.6; font-size: 0.8rem; color: var(--text-color); 
+            padding: 8px; cursor: pointer; transition: 0.2s; flex: 1;
+        }
+        .nav-item.active { opacity: 1; color: var(--accent); transform: translateY(-5px); }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+
+        .location-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        select { 
+            flex: 1; background: var(--select-bg); color: var(--text-color); 
+            border: 1px solid var(--accent); padding: 8px; border-radius: 8px;
+            font-family: 'Tajawal'; cursor: pointer;
+        }
+        select option {
+            background: var(--card-bg); color: var(--text-color);
+        }
+
+        .loader { 
+            position: fixed; inset: 0; background: #000; z-index: 9999; 
+            display: flex; justify-content: center; align-items: center; 
+            transition: 0.5s; flex-direction: column;
+        }
+        .loader.hide { opacity: 0; pointer-events: none; }
+        .loader-text { color: #d4af37; margin-top: 20px; font-family: 'Cairo'; }
+        
+        .section-title {
+            text-align: center; margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent); color: var(--accent);
+        }
+        
+        .settings-option {
+            background: var(--card-bg); padding: 15px; border-radius: 10px; 
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .notification {
+            position: fixed; top: 20px; right: 20px; left: 20px; 
+            background: var(--accent); color: var(--bg-color); padding: 15px;
+            border-radius: 10px; z-index: 1001; text-align: center;
+            animation: slideIn 0.3s ease;
+            display: none;
+        }
+        @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .switch {
+            position: relative; display: inline-block; width: 50px; height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        
+        .calculation-info {
+            background: var(--card-bg); padding: 15px; border-radius: 10px;
+            margin-top: 15px; font-size: 0.9rem; opacity: 0.8;
+        }
+        
+        .weather-card {
+            background: var(--card-bg); border-radius: 15px; padding: 15px;
+            margin-bottom: 15px; display: flex; justify-content: space-between;
+            align-items: center; border-left: 5px solid var(--accent);
+        }
+        
+        .event-notification {
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            color: white; padding: 10px 15px; border-radius: 10px;
+            margin: 10px 0; display: flex; align-items: center; gap: 10px;
+        }
+        
+        .download-counter {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        .counter-item {
+            flex: 1; background: var(--card-bg); padding: 10px;
+            border-radius: 10px; text-align: center;
+        }
+        
+        select, .dhikr-selector, .card-input, #method-select, #qari-select, #theme-select, #city-select {
+            background-color: var(--select-bg) !important;
+            color: var(--text-color) !important;
+            border: 2px solid var(--accent) !important;
+            border-radius: 8px !important;
+            padding: 10px 15px !important;
+            font-family: 'Tajawal', sans-serif !important;
+            font-size: 1rem !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: left 15px center !important;
+            padding-right: 40px !important;
+            cursor: pointer !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        html[dir="rtl"] select, 
+        html[dir="rtl"] .dhikr-selector,
+        html[dir="rtl"] .card-input {
+            background-position: right 15px center !important;
+            padding-left: 40px !important;
+            padding-right: 15px !important;
+        }
+
+        select option, .dhikr-selector option, .card-input option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            padding: 12px !important;
+            font-size: 1rem !important;
+        }
+
+        [data-theme="kaaba"] select,
+        [data-theme="kaaba"] .dhikr-selector,
+        [data-theme="kaaba"] .card-input {
+            background-color: #1a1a1a !important;
+            color: #fff !important;
+            border-color: #d4af37 !important;
+        }
+
+        [data-theme="midnight"] select,
+        [data-theme="midnight"] .dhikr-selector,
+        [data-theme="midnight"] .card-input {
+            background-color: #2a2a2a !important;
+            color: #fff !important;
+        }
+
+        [data-theme="paper"] select,
+        [data-theme="paper"] .dhikr-selector,
+        [data-theme="paper"] .card-input {
+            background-color: #fff !important;
+            color: #333 !important;
+            border-color: #b8860b !important;
+        }
+
+        select::-moz-focus-inner {
+            border: 0 !important;
+        }
+
+        select:-moz-focusring {
+            color: transparent !important;
+            text-shadow: 0 0 0 var(--text-color) !important;
+        }
+
+        select:focus, .dhikr-selector:focus, .card-input:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        @media (max-width: 480px) {
+            .page-container { padding: 15px; padding-bottom: 80px; }
+            .digital-time { font-size: 1.7rem; }
+            .countdown { font-size: 1.8rem; }
+            .compass-ring { width: 200px; height: 200px; }
+            .tasbih-btn { width: 170px; height: 170px; }
+            .count-display { font-size: 3rem; }
+            .background-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        select, .dhikr-selector, .card-input, #method-select, #qari-select, #theme-select, #city-select {
+            background-color: var(--select-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        select option, .dhikr-selector option, .card-input option {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="paper"] select,
+        [data-theme="paper"] .dhikr-selector,
+        [data-theme="paper"] .card-input,
+        [data-theme="paper"] #method-select,
+        [data-theme="paper"] #qari-select,
+        [data-theme="paper"] #theme-select,
+        [data-theme="paper"] #city-select {
+            background-color: #f8f8f8 !important;
+            color: #333 !important;
+            border-color: #b8860b !important;
+        }
+
+        [data-theme="paper"] select option,
+        [data-theme="paper"] .dhikr-selector option,
+        [data-theme="paper"] .card-input option {
+            background-color: #fff !important;
+            color: #333 !important;
+        }
+
+        select:-moz-focusring {
+            color: transparent !important;
+            text-shadow: 0 0 0 var(--text-color) !important;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+        
+        @media all and (display-mode: standalone) {
+            body {
+                -webkit-overflow-scrolling: touch;
+                overflow: hidden;
+                height: 100vh;
+                height: calc(var(--vh, 1vh) * 100);
+            }
+            
+            .bottom-nav {
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+            
+            @supports (-webkit-touch-callout: none) {
+                body {
+                    padding-top: env(safe-area-inset-top);
+                    padding-bottom: env(safe-area-inset-bottom);
+                }
+            }
+        }
+
+        * {
+            touch-action: manipulation;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                overflow-x: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .app-shell {
+                max-width: 100%;
+                margin: 0;
+            }
+        }
+        
+        .pwa-exit-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .stream-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .stream-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .nav-sub-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-sub-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .bottom-nav {
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+        }
+        
+        @media (min-width: 768px) {
+            .app-shell {
+                border-radius: 20px;
+                overflow: hidden;
+                margin-top: 20px;
+                margin-bottom: 20px;
+                height: calc(100vh - 40px);
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+        }
+
+        /* بطاقات جديدة للشاشة الرئيسية */
+        .quick-info {
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin: 15px 0;
+        }
+        
+        .achievements-card {
+            background: var(--card-bg); 
+            border-radius: 15px; 
+            padding: 15px; 
+            margin: 15px 0;
+        }
+        
+        .upcoming-events {
+            background: var(--card-bg); 
+            border-radius: 15px; 
+            padding: 15px; 
+            margin-bottom: 15px;
+        }
+        
+        .reminders-card {
+            background: var(--card-bg); 
+            border-radius: 15px; 
+            padding: 15px; 
+            border: 2px dashed var(--accent);
+        }
+/* تنسيقات نافذة الإعدادات الأولية */
+.setup-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex; justify-content: center; align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+.setup-card {
+    background: var(--card-bg);
+    border: 2px solid var(--accent);
+    border-radius: 20px;
+    padding: 25px;
+    width: 100%; max-width: 450px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+.setup-header { text-align: center; margin-bottom: 25px; }
+.setup-header h2 { margin: 10px 0 5px; color: var(--accent); }
+.setup-header p { opacity: 0.7; font-size: 0.9rem; }
+
+.setup-step { margin-bottom: 20px; }
+.setup-step label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--accent); }
+
+.theme-grid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.theme-option {
+    width: 45px; height: 45px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.2s; font-size: 1.2rem;
+}
+.theme-option:hover { transform: scale(1.2); border-color: var(--accent); }
+/* ضبط حاوية البحث */
+.location-search-box input {
+    flex: 1; /* يأخذ باقي المساحة بجانب الزر */
+    height: 48px; /* نفس ارتفاع الزر */
+    background-color: var(--card-bg) !important; /* خلفية داكنة شفافة */
+    border: 2px solid var(--accent) !important; /* إطار ذهبي */
+    color: var(--text-color) !important; /* لون النص */
+    border-radius: 10px; /* حواف دائرية */
+    padding: 0 15px; /* مسافة للكتابة */
+    font-family: 'Tajawal', sans-serif;
+    outline: none;
+    box-shadow: none;
+}
+
+/* تنسيق النص التوضيحي (Placeholder) داخل المربع */
+.location-search-box input::placeholder {
+    color: var(--text-color);
+    opacity: 0.5;
+}
+
+/* تأثير عند الضغط داخل المربع */
+.location-search-box input:focus {
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); /* توهج خفيف بلون الثيم */
+}
+
+.btn-gps {
+    width: 45px;
+    background: var(--accent);
+    color: var(--bg-color);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: 0.2s;
+}
+
+.btn-gps:hover { transform: scale(1.1); }
+
+/* قائمة نتائج البحث العائمة */
+.search-results {
+    position: absolute;
+    width: calc(100% - 90px); /* عرض تقريبي */
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    border-radius: 0 0 10px 10px;
+    z-index: 1000;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    margin-top: 5px;
+}
+
+.search-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+
+.search-item:hover {
+    background: var(--accent);
+    color: var(--bg-color);
+}
+/* تنسيقات الختمة */
+.khatmah-wizard {
+    text-align: center;
+    background: var(--card-bg);
+    padding: 30px 20px;
+    border-radius: 20px;
+    border: 2px dashed var(--accent);
+}
+
+.khatmah-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.khatmah-circle {
+    width: 100px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.circular-chart {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 250px;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.1);
+    stroke-width: 3.8;
+}
+[data-theme="paper"] .circle-bg { stroke: rgba(0,0,0,0.1); }
+
+.circle {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    stroke: var(--accent);
+    animation: progress 1s ease-out forwards;
+}
+
+.percentage {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.khatmah-stats {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.khatmah-daily-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 20px;
+    border-right: 5px solid var(--accent);
+}
+
+.daily-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+}
+
+.page-range {
+    background: var(--accent);
+    color: var(--bg-color);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.khatmah-task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.khatmah-task-row.completed {
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid #4CAF50;
+}
+
+.task-checkbox {
+    width: 25px; height: 25px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.khatmah-task-row.completed .task-checkbox {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+}
+/* تنسيق صندوق عرض الموقع */
+.current-location-display {
+    background: var(--select-bg);
+    border: 2px solid var(--accent);
+    padding: 10px 15px;
+    border-radius: 10px;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+.current-location-display:active { transform: scale(0.98); }
+#location-name-display { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* تنسيق النافذة المنبثقة */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    backdrop-filter: blur(5px); animation: fadeIn 0.3s;
+}
+.modal-card {
+    background: var(--card-bg); width: 100%; max-width: 400px;
+    border-radius: 20px; border: 1px solid var(--accent); overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.modal-header {
+    padding: 15px; background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center;
+}
+.modal-body { padding: 20px; }
+.close-btn { background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer; }
+
+/* قائمة النتائج */
+.search-results-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--card-bg); border: 1px solid var(--accent);
+    border-radius: 0 0 10px 10px; max-height: 250px; overflow-y: auto;
+    z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.search-result-item {
+    padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+    display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+}
+.search-result-item:hover { background: var(--accent); color: var(--bg-color); }
+/* تنسيق النص التوضيحي أسفل البحث */
+
+.input-hint {
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-top: 10px;
+    line-height: 1.5;
+    display: block; /* هام جداً: إلغاء flex لجعل النص ينساب بشكل طبيعي */
+    text-align: right; /* محاذاة لليمين */
+}
+
+/* حركة الزر (كما هي) */
+.pulse-btn {
+    animation: pulse-shadow 2s infinite;
+}
+
+@keyframes pulse-shadow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); /* لون الذهبي شفاف */
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+    }
+}
+/* === تنسيقات قارئ القرآن والتفسير === */
+.reader-view {
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-color); 
+    z-index: 99999 !important; /* مهم جداً */
+    display: flex; 
+    flex-direction: column;
+}
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.reader-header-sticky {
+    height: 60px; background: var(--card-bg);
+    border-bottom: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 15px; font-weight: bold; font-size: 1.2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.close-reader-btn {
+    background: none; border: none; color: var(--text-color);
+    font-size: 1.2rem; cursor: pointer; padding: 5px;
+}
+
+.reader-content {
+    flex: 1; overflow-y: auto; padding: 20px;
+    padding-bottom: 100px; /* مساحة في الأسفل */
+}
+
+.ayah-container {
+    background: var(--card-bg); border-radius: 15px;
+    padding: 20px; margin-bottom: 20px;
+    border-right: 4px solid var(--accent);
+}
+
+.ayah-text {
+    font-family: 'Amiri', serif; font-size: 1.6rem;
+    line-height: 2.2; text-align: justify; margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.ayah-number-badge {
+    display: inline-block; width: 30px; height: 30px;
+    background: rgba(0,0,0,0.1); border-radius: 50%;
+    text-align: center; line-height: 30px; font-size: 0.8rem;
+    margin-left: 5px; border: 1px solid var(--accent);
+}
+
+.tafseer-text {
+    font-size: 0.95rem; color: var(--text-color); opacity: 0.8;
+    line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px; margin-top: 10px;
+    font-family: 'Tajawal', sans-serif;
+}
+[data-theme="paper"] .tafseer-text { border-top: 1px solid rgba(0,0,0,0.1); }
+
+/* في ملف style.css أضف هذه الأكواد */
+
+/* إخفاء التفسير عند اختيار وضع القراءة فقط */
+.reader-content.hide-tafseer .tafseer-text {
+    display: none !important;
+}
+
+/* تنسيق مشغل الصوت المصغر داخل وضع القراءة */
+.mini-player-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card-bg);
+    border-top: 2px solid var(--accent);
+    padding: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 2002; /* أعلى من الـ Reader */
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+}
+
+/* تنسيق أزرار المودال الجديدة */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.option-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    color: var(--text-color);
+    cursor: pointer; transition: 0.2s;
+}
+.option-btn:active { background: var(--accent); color: var(--bg-color); }
+.option-btn i { font-size: 1.5rem; margin-bottom: 5px; }
+
+/* إصلاح مشكلة عدم ظهور المودال */
+.modal-overlay {
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,0.8); 
+    z-index: 99999 !important; /* مهم جداً */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    backdrop-filter: blur(5px);
+}
+/* === إصلاح نهائي لظهور نافذة خيارات السورة === */
+#surah-options-modal {
+    display: none; /* مخفي افتراضياً */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 99999 !important; /* رقم عالي جداً ليظهر فوق كل شيء */
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+#surah-options-modal.active {
+    display: flex !important; /* إجبار الظهور عند إضافة كلاس active */
+}
+
+/* تحسين شكل أزرار الخيارات */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.option-btn {
+    padding: 15px;
+    background: var(--card-bg);
+    border: 2px solid var(--accent);
+    border-radius: 15px;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.option-btn:active {
+    transform: scale(0.95);
+    background: var(--accent);
+    color: var(--bg-color);
+}
+
