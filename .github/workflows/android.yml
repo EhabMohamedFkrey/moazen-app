@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # إعداد جافا 17 (ضروري للإصدارات الحديثة)
+      # استخدام جافا 17 المتوافق مع أندرويد 13
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -31,11 +31,16 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # هذه الخطوة تحل مشكلة "المجلد موجود" وتتأكد من الملفات
-      - name: Prepare Project Structure
+      # تنظيف وترتيب الملفات (هذه الخطوة تحل مشكلة المجلدات وتضمن وجود www)
+      - name: Organize Files
         run: |
-          mkdir -p www
-          # نقل الملفات بأمان (فقط إذا كانت موجودة في الخارج)
+          # حذف أي بقايا قديمة قد تسبب مشاكل
+          rm -rf platforms plugins node_modules package-lock.json www
+          
+          # إنشاء مجلد www جديد
+          mkdir www
+          
+          # نقل ملفات المشروع إلى داخله (إذا كانت موجودة في الخارج)
           [ -f index.html ] && mv index.html www/ || true
           [ -f style.css ] && mv style.css www/ || true
           [ -f script.js ] && mv script.js www/ || true
@@ -45,16 +50,16 @@ jobs:
           
           # إنشاء مجلد الأيقونات لتجنب توقف البناء
           mkdir -p res/android/icon/
-          touch res/android/icon/ldpi.png 
+          touch res/android/icon/ldpi.png
 
       - name: Install Dependencies
         run: npm install
 
-      # استخدام اندرويد 13.0.0 (لحل مشكلة Gradle و XmlParser)
+      # إضافة منصة أندرويد 13 (أحدث نسخة تحل مشكلة XmlParser)
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
-      - name: Build APK (Debug)
+      - name: Build APK
         run: cordova build android --debug --device
 
       - name: Upload APK
