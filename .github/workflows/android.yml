@@ -13,18 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # استخدام الإصدار v4 الأحدث
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # استخدام الإصدار v4 الأحدث
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # استخدام الإصدار v4 الأحدث
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,11 +30,13 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # حل مشكلة الخطأ في الصورة: استخدام -p مع mkdir ونقل الملفات بأمان
       - name: Prepare Project Structure
         run: |
+          # إنشاء المجلد فقط إذا لم يكن موجوداً
           mkdir -p www
-          # نقل ملفات الويب فقط إلى داخل www
+          
+          # نقل الملفات واحداً تلو الآخر مع تجاهل الأخطاء إذا كان الملف منقولاً بالفعل
+          # هذا يمنع توقف البناء إذا قمت بترتيب الملفات بنفسك
           [ -f index.html ] && mv index.html www/ || true
           [ -f style.css ] && mv style.css www/ || true
           [ -f script.js ] && mv script.js www/ || true
@@ -45,7 +44,7 @@ jobs:
           [ -f sw.js ] && mv sw.js www/ || true
           [ -f adhan.mp3 ] && mv adhan.mp3 www/ || true
           
-          # إنشاء مجلدات الأيقونات فارغة لتجنب الأخطاء مؤقتاً
+          # إنشاء مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png 
 
@@ -58,7 +57,6 @@ jobs:
       - name: Build APK (Debug)
         run: cordova build android --debug --device
 
-      # استخدام الإصدار v4 لحل مشكلة التحذير
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
