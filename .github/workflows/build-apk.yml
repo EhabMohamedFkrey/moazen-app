@@ -19,36 +19,43 @@ jobs:
       with:
         node-version: '18'
 
+    # تحسين: تفعيل الكاش لملفات Gradle لتسريع بناء الأندرويد
     - name: Setup Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'gradle' # هذا السطر سيوفر وقت تحميل مكتبات أندرويد
 
-    # تصحيح: إضافة sudo لتجنب خطأ الصلاحيات EACCES
+    # تحسين: كاش لمجلد Bubblewrap لتجنب تحميل الأدوات الخاصة به كل مرة
+    - name: Cache Bubblewrap
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.bubblewrap
+          ~/.android/build-cache
+        key: ${{ runner.os }}-bubblewrap-${{ hashFiles('twa-manifest.json') }}
+        restore-keys: |
+          ${{ runner.os }}-bubblewrap-
+
     - name: Install Bubblewrap
       run: sudo npm install -g @bubblewrap/cli
 
-    - name: Build APK
+    - name: Initialize & Build APK
       run: |
-        # تنظيف أي بقايا
-        rm -rf $HOME/.bubblewrap
-        
-        # إنشاء المفاتيح (ملاحظة: Bubblewrap قد يطلب مفاتيح أيضاً، لكن سنبقي كودك كما هو)
-        keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
-        
-        # إعداد مسار Android SDK الموجود مسبقاً في GitHub Actions
-        # هذا يمنع Bubblewrap من محاولة تحميل SDK جديد ويوفر الوقت والمشاكل
+        # ربط Bubblewrap بـ Android SDK الموجود في السيرفر لتوفير الوقت
         export ANDROID_HOME=$ANDROID_SDK_ROOT
         
-        # الأمر السحري للبناء
-        # استخدام yes للموافقة على التراخيص والأسئلة التلقائية
+        # إنشاء ملف المفاتيح (Keystore)
+        # ملاحظة: للأمان مستقبلاً يفضل استخدام GitHub Secrets
+        keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
+        
+        # تهيئة Bubblewrap في حالة لم يكن مهيأ (باستخدام yes للموافقة التلقائية)
+        # تم إزالة أمر المسح rm -rf للاستفادة من الكاش
         yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
-    # هذه الخطوة قد تكون زائدة لأن Bubblewrap ينتج ملف موقع بالفعل
-    # ولكن سأتركها لضمان التوقيع بمفتاحك الخاص إذا لزم الأمر
     - name: Sign APK
-      continue-on-error: true # لكي لا يوقف البناء إذا كان الملف موقعاً بالفعل
+      continue-on-error: true
       run: |
         jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
