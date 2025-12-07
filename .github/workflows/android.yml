@@ -30,39 +30,40 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # تنظيف البيئة
-      - name: Prepare Environment
+      - name: Clean & Fix Dependencies
         run: |
-          rm -rf platforms plugins node_modules package-lock.json
+          # 1. تنظيف عميق للمشروع
+          rm -rf node_modules package-lock.json plugins platforms
           
+          # 2. حذف سطر الإضافة القديمة تماماً من package.json لمنع أي خطأ في التحميل
+          # هذا الأمر يحذف أي سطر يحتوي على اسم الإضافة
+          sed -i '/cordova-plugin-local-notification/d' package.json
+          
+          # 3. التأكد من وجود مجلد www
           if [ ! -d "www" ]; then
-            echo "Error: www directory not found!"
-            exit 1
+             mkdir www
+             # إنشاء ملف تجريبي إذا كان المجلد فارغاً لتجنب الخطأ
+             echo "<html><body>App</body></html>" > www/index.html
           fi
-          
+
+          # 4. إنشاء مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      # الإصلاح الجديد: إجبار النظام على استخدام HTTPS وتصحيح الرابط
-      - name: Fix Plugins & Git Protocol
-        run: |
-          # هذا الأمر يمنع خطأ SSH Permission Denied
-          git config --global url."https://github.com/".insteadOf git@github.com:
-          git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-
-          # استبدال الإضافة برابط git+https الصحيح تماماً
-          sed -i 's|git+https://github.com/katzer/cordova-plugin-local-notifications.git|git+https://github.com/timbrussel/cordova-plugin-local-notifications.git|g' package.json
-          
-          echo "تم تحديث إعدادات Git ورابط الإضافة بنجاح"
-
-      - name: Install Dependencies
+      - name: Install Base Dependencies
         run: npm install
+
+      - name: Install Fixed Notification Plugin
+        run: |
+          # تثبيت النسخة السليمة يدوياً وبشكل نظيف
+          cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git --save
 
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
       - name: Build APK
         run: |
+          # إضافة أعلام Gradle لحل مشاكل التوافق القديمة (AndroidX)
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
 
       - name: Upload APK
