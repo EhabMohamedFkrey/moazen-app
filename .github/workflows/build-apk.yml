@@ -31,7 +31,7 @@ jobs:
       run: |
         npm install -g @bubblewrap/cli
 
-    # 5) Create Bubblewrap project (لو موجود لن يعيد كتابته)
+    # 5) Create Bubblewrap project (لو موجود لن  يعيد كتابته)
     - name: Init Bubblewrap Project
       run: |
         bubblewrap init --manifest=https://moazen-app.netlify.app/manifest.json || true
@@ -52,3 +52,4 @@ jobs:
       with:
         name: app-release
         path: build/app-release-signed.apk
+
