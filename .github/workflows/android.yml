@@ -13,124 +13,89 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. جلب الكود
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      # 2. إعداد جافا 17 (إجباري لأندرويد 13)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # 3. إعداد Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Install Cordova and Dependencies
-        run: |
-          npm install -g cordova@11.0.0
-          npm install -g cordova-res
+      # 4. تثبيت كوردوفا
+      - name: Install Cordova
+        run: npm install -g cordova
 
-      - name: Prepare Environment
+      # 5. الخطوة الحاسمة: تنظيف package.json من الإضافة الخاطئة
+      # نستخدم سكربت Node.js لضمان عدم حدوث خطأ في الفواصل (JSON Error)
+      - name: Sanitize package.json
         run: |
-          # تنظيف شامل
-          rm -rf platforms plugins node_modules www package-lock.json
+          node -e "
+            const fs = require('fs');
+            try {
+              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+              
+              // حذف الإضافة القديمة تماماً من القوائم
+              if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
+              if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+              
+              // حفظ الملف نظيفاً
+              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+              console.log('Successfully removed broken plugin from package.json');
+            } catch (e) {
+              console.error(e);
+              process.exit(1);
+            }
+          "
+
+      # 6. تجهيز المجلدات (لحل مشكلة Source path does not exist)
+      - name: Prepare Directories
+        run: |
+          # حذف أي مجلدات قديمة
+          rm -rf node_modules package-lock.json plugins platforms
           
-          # تأكد من وجود مجلد www
+          # التأكد من وجود مجلد www
           if [ ! -d "www" ]; then
-            echo "Creating www directory..."
             mkdir www
-            echo '<!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>المؤذن</title>
-            </head>
-            <body>
-                <h1>Professional Azan App</h1>
-                <p>Loading...</p>
-            </body>
-            </html>' > www/index.html
+            echo "<html><body>App</body></html>" > www/index.html
           fi
           
-          # إنشاء أيقونات افتراضية
+          # إنشاء مجلد الأيقونات
           mkdir -p res/android/icon/
-          mkdir -p res/android/screen/
-          
-          # إنشاء أيقونة افتراضية باستخدام ImageMagick
-          apt-get update && apt-get install -y imagemagick
-          convert -size 36x36 xc:#4CAF50 res/android/icon/ldpi.png
-          convert -size 48x48 xc:#4CAF50 res/android/icon/mdpi.png
-          convert -size 72x72 xc:#4CAF50 res/android/icon/hdpi.png
-          convert -size 96x96 xc:#4CAF50 res/android/icon/xhdpi.png
-          convert -size 144x144 xc:#4CAF50 res/android/icon/xxhdpi.png
-          convert -size 192x192 xc:#4CAF50 res/android/icon/xxxhdpi.png
+          touch res/android/icon/ldpi.png
 
-      - name: Install NPM Dependencies
+      # 7. تثبيت المكتبات (الآن سينجح لأننا حذفنا الرابط المعطوب)
+      - name: Install Base Dependencies
+        run: npm install
+
+      # 8. تثبيت الإضافة السليمة يدوياً (لتجاوز مشاكل الشبكة)
+      - name: Install Correct Plugin Manually
         run: |
-          # تثبيت الاعتماديات
-          npm install
+          echo "Cloning fixed plugin..."
+          git clone https://github.com/timbrussel/cordova-plugin-local-notifications.git fixed-plugin
           
-          # إصلاح إصدارات محددة للمكونات الإضافية
-          npm uninstall cordova-android --save
-          npm install cordova-android@10.1.2 --save
-          
-          npm uninstall cordova-plugin-geolocation --save
-          npm install cordova-plugin-geolocation@4.1.0 --save
-          
-          npm uninstall cordova-plugin-device --save
-          npm install cordova-plugin-device@2.1.0 --save
+          echo "Installing plugin from local folder..."
+          cordova plugin add ./fixed-plugin --save
 
+      # 9. إضافة منصة أندرويد
       - name: Add Android Platform
-        run: |
-          # إزالة أي منصة سابقة
-          cordova platform rm android 2>/dev/null || true
-          
-          # إضافة المنصة
-          cordova platform add android@10.1.2 --force
+        run: cordova platform add android@13.0.0 --force
 
-      - name: Add Required Plugins
-        run: |
-          # إزالة المكونات الإضافية السابقة
-          cordova plugin rm cordova-plugin-local-notification 2>/dev/null || true
-          cordova plugin rm cordova-plugin-android-permissions 2>/dev/null || true
-          cordova plugin rm cordova-plugin-geolocation 2>/dev/null || true
-          cordova plugin rm cordova-plugin-device 2>/dev/null || true
-          cordova plugin rm cordova-plugin-dialogs 2>/dev/null || true
-          
-          # إضافة المكونات الإضافية
-          cordova plugin add cordova-plugin-device@2.1.0
-          cordova plugin add cordova-plugin-dialogs@2.0.2
-          cordova plugin add cordova-plugin-geolocation@4.1.0
-          cordova plugin add cordova-plugin-android-permissions@1.1.5
-          
-          # استخدام إصدار محدد من local-notification
-          cordova plugin add https://github.com/katzer/cordova-plugin-local-notifications#0.9.0-beta.3
-
-      - name: Configure Build Settings
-        run: |
-          # إنشاء ملف config.xml إذا لم يكن موجوداً
-          if [ ! -f "config.xml" ]; then
-            cordova create . com.ehab.moazen "المؤذن"
-          fi
-          
-          # إعدادات البناء
-          cordova config set --android-minSdkVersion 22
-          cordova config set --android-targetSdkVersion 31
-
+      # 10. بناء التطبيق (مع حل مشاكل AndroidX)
       - name: Build APK
         run: |
-          # تنظيف وبناء
-          cordova clean
-          cordova build android --debug --device --verbose
+          cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Moazen-App-APK
-          path: |
-            platforms/android/app/build/outputs/apk/debug/*.apk
-            platforms/android/app/build/outputs/apk/release/*.apk
-          retention-days: 7
+          name: Moazen-App
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
