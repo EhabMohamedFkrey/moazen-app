@@ -1,1 +1,1025 @@
-test
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>مؤذن  البوب</title>
+    <link rel="stylesheet" href="style.css">
+<script src="script.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;800&family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="المؤذن">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4358/4358666.png">
+   <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="المؤذن">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4358/4358666.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        
+    </style>
+</head>
+<body data-theme="kaaba">
+    
+    <div class="pattern-overlay"></div>
+    <div class="loader" id="loader">
+        <i class="fas fa-kaaba fa-spin fa-3x" style="color:#d4af37"></i>
+        <div class="loader-text">جاري التحميل...</div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <audio id="adhan-audio" src="https://www.islamcan.com/audio/adhan/azan2.mp3" preload="auto"></audio>
+ <audio id="click-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="quran-audio" preload="auto"></audio>
+
+    <div class="app-shell">
+        <div style="position:absolute; top:20px; left:20px; z-index:10; cursor:pointer" onclick="toggleMute()">
+            <i class="fas fa-volume-mute" id="mute-icon" style="font-size:1.2rem; opacity:0.7"></i>
+        </div>
+
+        <!-- 1. الرئيسية -->
+        <div id="page-home" class="page-container page active">
+            <div class="dashboard-header">
+                <div class="clock-info">
+                    <div class="digital-time" id="digital-clock">00:00:00</div>
+                    <div class="date-row"><i class="far fa-calendar-alt date-icon"></i> <span id="hijri-date">...</span></div>
+                    <div class="date-row"><i class="fas fa-globe date-icon"></i> <span id="greg-date">...</span></div>
+                    <div class="weather-info" id="weather-info" style="display:none">
+                        <i class="fas fa-thermometer-half"></i>
+                        <span class="weather-temp" id="weather-temp">--°C</span>
+                        <span id="weather-desc">--</span>
+                    </div>
+                </div>
+                <div class="analog-clock">
+                    <div class="hand hour" id="hour-hand"></div>
+                    <div class="hand min" id="min-hand"></div>
+                    <div class="hand sec" id="sec-hand"></div>
+                </div>
+            </div>
+
+            <div class="location-box" style="flex-direction: column; gap: 5px;">
+    <div class="current-location-display" id="location-display-box" onclick="toggleLocationSearch()">
+        <i class="fas fa-map-marker-alt" style="color:var(--accent)"></i>
+        <span id="location-name-display">جاري تحديد الموقع...</span>
+        <i class="fas fa-chevron-down" style="font-size:0.8rem; opacity:0.7"></i>
+    </div>
+
+    <select id="theme-select" onchange="changeTheme(this.value)" style="margin-top:5px">
+        <option value="kaaba">🕋 الكعبة</option>
+        <option value="medina">🕌 المدينة</option>
+        <option value="royal">👑 ملكي</option>
+        <option value="paper">📄 ورقي</option>
+        <option value="midnight">🌑 ليلي</option>
+        <option value="nature">🌿 طبيعة</option>
+        <option value="ramadan">🌙 رمضان</option>
+        <option value="hajj">🕋 حج</option>
+        <option value="sunset">🌅 غروب</option>
+        <option value="ocean">🌊 محيط</option>
+        <option value="desert">🏜️ صحراء</option>
+        <option value="golden">🌟 ذهبي</option>
+        <option value="sky">🌤️ سماء</option>
+        <option value="purple-rain">💜 أرجواني</option>
+    </select>
+</div>
+
+<div id="location-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>📍 تغيير الموقع</h3>
+            <button onclick="toggleLocationSearch()" class="close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <button onclick="CityManager.detectLocation()" class="btn-outline" style="width:100%; margin-bottom:15px; border-color:var(--accent)">
+                <i class="fas fa-crosshairs"></i> استخدام موقعي الحالي (GPS)
+            </button>
+            
+            <div style="position:relative">
+                <input type="text" id="global-city-search" class="card-input" placeholder="اكتب اسم مدينتك أو قريتك..." oninput="CityManager.searchOnline(this.value)">
+                <div id="online-search-results" class="search-results-list" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+            <div class="main-circle">
+                <div class="next-label">الصلاة القادمة</div>
+                <div class="next-name" id="next-prayer">...</div>
+                <div class="countdown" id="countdown">--:--:--</div>
+            </div>
+
+            <div id="prayers-list"></div>
+            
+            <!-- بطاقة المعلومات السريعة -->
+            <div class="quick-info">
+                <div style="background: var(--card-bg); padding: 10px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 0.8rem; opacity: 0.8;">الأذكار اليوم</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent);" id="today-dhikr-count">0</div>
+                </div>
+                <div style="background: var(--card-bg); padding: 10px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 0.8rem; opacity: 0.8;">الصلوات اليوم</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent);" id="today-prayer-count">0</div>
+                </div>
+                <div style="background: var(--card-bg); padding: 10px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 0.8rem; opacity: 0.8;">دقائق القرآن</div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent);" id="today-quran-count">0</div>
+                </div>
+            </div>
+            
+            <!-- بطاقة الإنجازات -->
+            <div class="achievements-card">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 10px;">
+                    <i class="fas fa-trophy"></i> إنجازات اليوم
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);" id="achievement-prayers">0</div>
+                        <div style="font-size: 0.8rem;">صلوات</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);" id="achievement-dhikr">0</div>
+                        <div style="font-size: 0.8rem;">أذكار</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);" id="achievement-quran">0</div>
+                        <div style="font-size: 0.8rem;">دقائق قرآن</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button onclick="addQuranMinute()" class="btn-outline" style="padding: 5px 15px; font-size: 0.8rem;">
+                        <i class="fas fa-plus"></i> إضافة دقيقة قرآن
+                    </button>
+                </div>
+            </div>
+            
+            <!-- بطاقة الطقس -->
+            <div class="weather-card" id="weather-card" style="display:none">
+                <div>
+                    <div style="font-weight:bold; margin-bottom:5px">🌤️ حالة الطقس</div>
+                    <div id="weather-details">--</div>
+                </div>
+                <div style="text-align:center">
+                    <div id="weather-icon" style="font-size:2rem">☀️</div>
+                </div>
+            </div>
+            
+            <!-- بطاقة اليوم الهجري -->
+            <div class="weather-card" style="background: linear-gradient(135deg, #8B4513, #D2691E); color: white;">
+                <div>
+                    <div style="font-weight:bold; margin-bottom:5px">📅 اليوم الهجري</div>
+                    <div id="hijri-day-info">...</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:2rem">🌙</div>
+                </div>
+            </div>
+            
+            <!-- إظهار معلومات الحساب -->
+            <div class="calculation-info">
+                <div><i class="fas fa-info-circle"></i> طريقة الحساب: <span id="method-name">أم القرى</span></div>
+                <div><i class="fas fa-map-marker-alt"></i> الموقع: <span id="location-name">مكة المكرمة</span></div>
+                <div><i class="fas fa-clock"></i> تحديث تلقائي كل دقيقة</div>
+            </div>
+        </div>
+
+        <!-- 2. التقويم المحسّن -->
+        <div id="page-calendar" class="page-container page">
+            <h2 class="section-title">📅 مواقيت الشهر</h2>
+            
+            <div style="margin-bottom:15px; text-align:center">
+                <button onclick="prevMonth()" class="btn-outline"><i class="fas fa-arrow-right"></i> الشهر السابق</button>
+                <span id="current-month" style="margin:0 10px; font-weight:bold"></span>
+                <button onclick="nextMonth()" class="btn-outline">الشهر التالي <i class="fas fa-arrow-left"></i></button>
+            </div>
+            
+            <div class="calendar-wrapper">
+                <table class="cal-table">
+                    <thead>
+                        <tr>
+                            <th>اليوم</th><th>فجر</th><th>ظهر</th><th>عصر</th><th>مغرب</th><th>عشاء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body">
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align:center; margin-top:20px">
+                <div class="download-counter">
+                    <button onclick="exportToCSV()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-file-export"></i> تصدير CSV
+                    </button>
+                    <button onclick="takeScreenshot()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-camera"></i> لقطة شاشة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. القبلة المحسنة -->
+        <div id="page-qibla" class="page-container page">
+            <div class="compass-container">
+                <h2 class="section-title">🧭 اتجاه القبلة</h2>
+                <div class="compass-ring" id="compass">
+                    <div class="kaaba-icon"><i class="fas fa-kaaba"></i></div>
+                    <div class="compass-arrow" id="compass-arrow"></div>
+                </div>
+                <div style="font-size:2rem; font-weight:bold; margin:20px 0">
+                    <span id="qibla-degree">0</span>° 
+                    <div style="font-size:1rem; opacity:0.8" id="qibla-direction">...</div>
+                </div>
+                <button onclick="startCompass()" class="btn-outline" id="compass-btn">
+                    <i class="fas fa-compass"></i> تفعيل البوصلة
+                </button>
+                <div style="font-size:0.8rem; opacity:0.6; margin-top:10px">
+                    أدر جهازك لمعرفة اتجاه القبلة
+                </div>
+                
+                <div class="calculation-info" style="margin-top:20px">
+                    <div><i class="fas fa-calculator"></i> إحداثيات القبلة: 21.4225°N, 39.8262°E</div>
+                    <div><i class="fas fa-map-pin"></i> اتجاه القبلة من موقعك الحالي</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. الأذكار المحسنة مع Dropdown -->
+        <div id="page-athkar" class="page-container page">
+            <h2 class="section-title">📿 المسبحة</h2>
+            
+            <div class="tasbih-container">
+                <select class="dhikr-selector" id="dhikr-select" onchange="changeDhikr(this.value)">
+                    <option value="0">سبحان الله (33 مرة)</option>
+                    <option value="1">الحمد لله (33 مرة)</option>
+                    <option value="2">الله أكبر (34 مرة)</option>
+                    <option value="3">لا إله إلا الله (100 مرة)</option>
+                    <option value="4">أستغفر الله (100 مرة)</option>
+                    <option value="5">سبحان الله وبحمده (100 مرة)</option>
+                    <option value="6">لاحول ولا قوة إلا بالله (100 مرة)</option>
+                    <option value="7">حسبي الله ونعم الوكيل (100 مرة)</option>
+                    <option value="8">سبحان الله العظيم وبحمده (100 مرة)</option>
+                </select>
+                
+                <div class="dhikr-display" id="dhikr-text">سبحان الله</div>
+                
+                <div class="tasbih-btn" onclick="incrementTasbih()" id="tasbih-button">
+                    <div class="count-display" id="tasbih-count">0</div>
+                    <div style="font-size:0.8rem; margin-top:5px; opacity:0.8">اضغط للتسبيح</div>
+                    <div style="font-size:0.7rem; margin-top:2px; opacity:0.6" id="dhikr-target">/ 33</div>
+                </div>
+                
+                <div class="dhikr-controls">
+                    <button onclick="resetTasbih()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-redo"></i> تصفير
+                    </button>
+                    <button onclick="saveDhikr()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                    <button onclick="loadDhikr()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-undo"></i> استعادة
+                    </button>
+                </div>
+                
+                <div style="margin-top:30px; background:var(--card-bg); padding:15px; border-radius:15px">
+                    <div style="font-weight:bold; margin-bottom:10px; color:var(--accent)">مجموع الأذكار اليوم</div>
+                    <div id="daily-total">0 ذكر</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. المناسبات والأعياد -->
+        <div id="page-events" class="page-container page">
+            <h2 class="section-title">🎉 المناسبات والأعياد</h2>
+            
+            <!-- شريط البحث -->
+            <div style="margin-bottom: 20px;">
+                <div style="position: relative;">
+                    <input type="text" id="search-events" class="card-input" placeholder="🔍 ابحث في المناسبات..." 
+                           oninput="searchEvents()" style="padding-right: 45px;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--accent);"></i>
+                </div>
+            </div>
+            
+            <!-- عداد رمضان -->
+            <div id="ramadan-counter" class="ramadan-banner" style="display:none">
+                <div>
+                    <div style="font-size:1.2rem; font-weight:bold">🌙 شهر رمضان المبارك</div>
+                    <div id="ramadan-days">- يوم</div>
+                </div>
+                <div style="font-size:2rem; color:#ffd700">
+                    <i class="fas fa-moon"></i>
+                </div>
+            </div>
+            
+            <!-- إشعار المناسبة القادمة -->
+            <div id="next-event-notification" class="event-notification" style="display:none">
+                <i class="fas fa-bell"></i>
+                <div>
+                    <div style="font-weight:bold" id="next-event-title"></div>
+                    <div id="next-event-time"></div>
+                </div>
+            </div>
+            
+            <!-- قائمة المناسبات -->
+            <div class="events-grid" id="events-list">
+            </div>
+            
+            <div style="text-align:center; margin-top:20px; opacity:0.7; font-size:0.9rem">
+                <i class="fas fa-info-circle"></i> التواريخ حسب التقويم الهجري المتوقع
+            </div>
+        </div>
+
+        <!-- 6. بطاقات المعايدة -->
+        <div id="page-greetings" class="page-container page">
+            <h2 class="section-title">💌 بطاقات المعايدة</h2>
+            
+            <div class="greeting-card-creator">
+                <div class="card-preview-container" id="card-preview">
+                    <div class="card-background" id="card-bg"></div>
+                    <div class="card-content">
+                        <div class="card-logo" id="card-logo">
+                            <i class="fas fa-mosque"></i>
+                        </div>
+                        <div class="card-name" id="card-name-display">اسمك هنا</div>
+                        <div class="card-message" id="card-message-display">تهنئة طيبة بمناسبة العيد</div>
+                    </div>
+                </div>
+                
+                <div class="card-controls">
+                    <input type="text" class="card-input" id="card-name" placeholder="أدخل اسمك" oninput="updateCard()">
+                    <input type="text" class="card-input" id="card-message" placeholder="أدخل رسالتك" oninput="updateCard()" value="تهنئة طيبة بمناسبة العيد">
+                    
+                    <div style="margin: 15px 0">
+                        <label style="display:block; margin-bottom:5px">اختر شعار:</label>
+                        <div style="display:flex; gap:10px">
+                            <div class="card-logo-small" onclick="selectLogo('mosque')" style="width:50px; height:50px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer">
+                                <i class="fas fa-mosque"></i>
+                            </div>
+                            <div class="card-logo-small" onclick="selectLogo('kaaba')" style="width:50px; height:50px; border-radius:50%; background:#d4af37; display:flex; align-items:center; justify-content:center; cursor:pointer">
+                                <i class="fas fa-kaaba"></i>
+                            </div>
+                            <div class="card-logo-small" onclick="selectLogo('star')" style="width:50px; height:50px; border-radius:50%; background:#4CAF50; display:flex; align-items:center; justify-content:center; cursor:pointer">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="card-logo-small" onclick="selectLogo('moon')" style="width:50px; height:50px; border-radius:50%; background:#2196F3; display:flex; align-items:center; justify-content:center; cursor:pointer">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <label style="display:block; margin-bottom:10px">اختر خلفية:</label>
+                    <div class="background-grid" id="background-grid">
+                    </div>
+                    
+                    <div style="margin-top:15px">
+                        <label style="display:block; margin-bottom:5px">رفع خلفية من الجهاز:</label>
+                        <input type="file" id="bg-upload" accept="image/*" style="display:none" onchange="uploadBackground(event)">
+                        <button onclick="document.getElementById('bg-upload').click()" class="btn-outline" style="width:100%">
+                            <i class="fas fa-upload"></i> رفع صورة من الجهاز
+                        </button>
+                    </div>
+                    
+                    <div class="card-buttons">
+                        <button onclick="downloadCard()" class="btn-outline" style="flex:1">
+                            <i class="fas fa-download"></i> تحميل البطاقة
+                        </button>
+                        <button onclick="shareCard()" class="btn-outline" style="flex:1">
+                            <i class="fas fa-share"></i> مشاركة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. القرآن الكريم -->
+        <div id="page-quran" class="page-container page">
+            <h2 class="section-title">📖 القرآن الكريم</h2>
+  
+            <div class="quran-container">
+                <div style="text-align:center; margin-bottom:20px">
+                    <input type="text" class="card-input" id="search-quran" placeholder="ابحث في القرآن..." style="width:100%" oninput="searchQuran()">
+                </div>
+                
+                <div style="margin-bottom:20px">
+                    <label style="display:block; margin-bottom:5px">اختر القارئ:</label>
+                    <select class="card-input" id="qari-select" onchange="changeQari()">
+    </select>
+
+                </div>
+                          
+                <div class="surah-list" id="surah-list">
+                </div>
+                
+                <div class="ayah-player" id="ayah-player" style="display:none">
+                    <div style="font-size:1.2rem; font-weight:bold" id="current-surah">سورة الفاتحة</div>
+                    <div style="font-family:'Amiri'; font-size:1.5rem; margin:15px 0" id="current-ayah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                    <div class="player-controls">
+                        <button onclick="playQuran()" class="btn-outline">
+                            <i class="fas fa-play"></i> تشغيل
+                        </button>
+                        <button onclick="pauseQuran()" class="btn-outline">
+                            <i class="fas fa-pause"></i> إيقاف
+                        </button>
+                        <button onclick="stopQuran()" class="btn-outline">
+                            <i class="fas fa-stop"></i> وقف
+                        </button>
+                        <button onclick="downloadAyah()" class="btn-outline">
+                            <i class="fas fa-download"></i> تحميل
+                        </button>
+                    </div>
+                    <div style="margin-top:10px; font-size:0.8rem; opacity:0.7" id="qari-info">القارئ: عبد الباسط عبد الصمد</div>
+</div></div></div>
+    
+  
+
+        <!-- 8. الأدعية -->
+        <div id="page-dua" class="page-container page">
+            <h2 class="section-title">🙏 الأدعية اليومية</h2>
+            
+            <!-- شريط البحث -->
+            <div style="margin-bottom: 20px;">
+                <div style="position: relative;">
+                    <input type="text" id="search-duas" class="card-input" placeholder="🔍 ابحث في الأدعية..." 
+                           oninput="searchDuas()" style="padding-right: 45px;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--accent);"></i>
+                </div>
+            </div>
+            
+            <div class="dua-container">
+                <div class="dua-categories" id="dua-categories">
+                    <div class="dua-category active" onclick="filterDua('all')">الكل</div>
+                    <div class="dua-category" onclick="filterDua('morning')">أدعية الصباح</div>
+                    <div class="dua-category" onclick="filterDua('evening')">أدعية المساء</div>
+                    <div class="dua-category" onclick="filterDua('prayer')">أدعية الصلاة</div>
+                    <div class="dua-category" onclick="filterDua('general')">أدعية عامة</div>
+                </div>
+                
+                <div id="dua-list">
+                </div>
+            </div>
+        </div>
+
+      
+<!-- 8. ختمه قرآن -->
+<div id="page-khatmah" class="page-container page">
+    <h2 class="section-title">📿 ختمة القرآن</h2>
+
+    <div id="khatmah-setup" style="display:none;">
+        <div class="khatmah-wizard">
+            <i class="fas fa-book-open fa-3x" style="color:var(--accent); margin-bottom:15px"></i>
+            <h3>اصنع خطة ختمتك</h3>
+            <p style="opacity:0.8; margin-bottom:20px">حدد المدة التي تريد أن تختم فيها القرآن الكريم</p>
+            
+            <div style="margin-bottom:20px">
+                <label style="display:block; margin-bottom:10px">عدد الأيام:</label>
+                <input type="number" id="khatmah-days" class="card-input" placeholder="مثلاً: 30" value="30" min="1">
+            </div>
+
+            <div style="background:var(--card-bg); padding:15px; border-radius:10px; margin-bottom:20px; font-size:0.9rem">
+                <i class="fas fa-calculator"></i> النتيجة المتوقعة:<br>
+                <span id="khatmah-preview" style="color:var(--accent); font-weight:bold; font-size:1.1rem">--</span>
+            </div>
+
+            <button onclick="KhatmahManager.createPlan()" class="btn-outline" style="width:100%; background:var(--accent); color:var(--bg-color)">
+                <i class="fas fa-check"></i> بدء الختمة
+            </button>
+        </div>
+    </div>
+
+    <div id="khatmah-dashboard" style="display:none;">
+        <div class="khatmah-header">
+            <div class="khatmah-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" id="khatmah-progress-circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="percentage">
+                    <span id="khatmah-percent">0%</span>
+                    <span style="font-size:0.8rem; display:block; opacity:0.7">مكتمل</span>
+                </div>
+            </div>
+            <div class="khatmah-stats">
+                <div><i class="fas fa-flag-checkered"></i> الهدف: <span id="target-days">0</span> يوم</div>
+                <div><i class="fas fa-book"></i> الصفحات: <span id="current-page-display">0</span> / 604</div>
+                <div><i class="fas fa-calendar-alt"></i> النهاية: <span id="end-date-display">--</span></div>
+            </div>
+        </div>
+
+        <div class="khatmah-daily-card">
+            <div class="daily-header">
+                <h3>📖 وردك اليوم</h3>
+                <div class="page-range" id="daily-range">صـ 1 إلى صـ 20</div>
+            </div>
+            
+            <div id="khatmah-prayers-list" class="khatmah-tasks">
+                </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:10px">
+            <button onclick="KhatmahManager.updateManualPage()" class="btn-outline" style="flex:1">
+                <i class="fas fa-edit"></i> تعديل الصفحة
+            </button>
+            <button onclick="KhatmahManager.deletePlan()" class="btn-outline" style="flex:1; border-color:#ff4444; color:#ff4444">
+                <i class="fas fa-trash"></i> إلغاء الخطة
+            </button>
+        </div>
+    </div>
+</div>
+
+        <!-- 10. المسابقات الدينية -->
+        <div id="page-quiz" class="page-container page">
+            <h2 class="section-title">🏆 المسابقات الدينية</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-card" id="quiz-card">
+                    <div class="quiz-question" id="quiz-question">ما هي السورة التي تسمى قلب القرآن؟</div>
+                    <div class="quiz-options" id="quiz-options">
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-top:15px">
+                    <button onclick="nextQuestion()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-forward"></i> السؤال التالي
+                    </button>
+                    <button onclick="newQuiz()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-sync"></i> مسابقة جديدة
+                    </button>
+                </div>
+                
+                <div class="quiz-score" id="quiz-score">
+                    النقاط: 0
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. البث المباشر --> 
+       <div id="page-live" class="page-container page">
+            <h2 class="section-title">📹 البث المباشر</h2>
+            
+            <div class="live-container" style="padding:20px">
+                
+                <div class="stream-card" style="background:var(--card-bg); border-radius:15px; padding:15px; margin-bottom:15px">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+                        <div style="display:flex; align-items:center; gap:10px">
+                            <i class="fas fa-kaaba" style="color:#d4af37; font-size:1.5rem"></i>
+                            <div>
+                                <div style="font-weight:bold">الحرم المكي</div>
+                                <div style="font-size:0.8rem; opacity:0.7">مكة المكرمة</div>
+                            </div>
+                        </div>
+                        <button onclick="playMakkahStream()" class="btn-outline" style="padding:5px 15px">
+                            <i class="fas fa-play"></i> تشغيل
+                        </button>
+                    </div>
+                    <div class="stream-container" id="makkah-stream" style="display:none">
+                        </div>
+                    <div id="makkah-alternative" style="text-align:center; padding:20px; background:rgba(0,0,0,0.1); border-radius:10px">
+                        <div style="font-size:3rem; margin-bottom:10px">🕋</div>
+                        <div style="margin-bottom:15px">بث مباشر 24 ساعة</div>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap">
+                            <button onclick="openYouTubeMakkah()" class="btn-outline">
+                                <i class="fab fa-youtube"></i> فتح يوتيوب
+                            </button>
+                            <button onclick="playRadioMakkah()" class="btn-outline">
+                                <i class="fas fa-volume-up"></i> راديو صوتي
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stream-card" style="background:var(--card-bg); border-radius:15px; padding:15px; margin-bottom:15px">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+                        <div style="display:flex; align-items:center; gap:10px">
+                            <i class="fas fa-mosque" style="color:#4CAF50; font-size:1.5rem"></i>
+                            <div>
+                                <div style="font-weight:bold">الحرم المدني</div>
+                                <div style="font-size:0.8rem; opacity:0.7">المدينة المنورة</div>
+                            </div>
+                        </div>
+                        <button onclick="playMadinahStream()" class="btn-outline" style="padding:5px 15px">
+                            <i class="fas fa-play"></i> تشغيل
+                        </button>
+                    </div>
+                    <div class="stream-container" id="madinah-stream" style="display:none">
+                         </div>
+                    <div id="madinah-alternative" style="text-align:center; padding:20px; background:rgba(0,0,0,0.1); border-radius:10px">
+                        <div style="font-size:3rem; margin-bottom:10px">🕌</div>
+                        <div style="margin-bottom:15px">بث مباشر 24 ساعة</div>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap">
+                            <button onclick="openYouTubeMadinah()" class="btn-outline">
+                                <i class="fab fa-youtube"></i> فتح يوتيوب
+                            </button>
+                            <button onclick="playRadioMadinah()" class="btn-outline">
+                                <i class="fas fa-volume-up"></i> راديو صوتي
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stream-card" style="background:var(--card-bg); border-radius:15px; padding:15px; margin-bottom:15px; border-right: 5px solid #8e44ad;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:10px">
+                            <div style="width:45px; height:45px; background:rgba(142, 68, 173, 0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#8e44ad; font-size:1.2rem">
+                                <i class="fas fa-microphone-alt"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:bold">إذاعة القرآن الكريم</div>
+                                <div style="font-size:0.8rem; opacity:0.7">بث مباشر من القاهرة</div>
+                            </div>
+                        </div>
+                        <button onclick="playRadioCairo()" class="btn-outline" style="padding:5px 15px; border-color:#8e44ad; color:var(--text-color)">
+                            <i class="fas fa-play"></i> استماع
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="StreamManager.stopAllStreams()" class="btn-outline" style="width:100%; margin-top:10px; border-color:#ff4444; color:#ff4444">
+                    <i class="fas fa-stop-circle"></i> إيقاف جميع البثوث
+                </button>
+
+                <div class="calculation-info" style="margin-top:20px">
+                    <div><i class="fas fa-wifi"></i> يفضل استخدام WiFi لضمان الجودة</div>
+                    <div><i class="fas fa-volume-up"></i> يمكنك التحكم بالصوت من زر الصوت بالأعلى</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- 12. متتبع الصلاة -->
+        <div id="page-prayer-tracker" class="page-container page">
+            <h2 class="section-title">📊 متتبع الصلاة</h2>
+            
+            <div class="tracker-container" style="padding:20px">
+                <div style="background:var(--card-bg); border-radius:15px; padding:20px; margin-bottom:20px">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px">
+                        <div style="font-weight:bold">صلاة اليوم: <span id="today-date"></span></div>
+                        <div style="color:var(--accent); font-weight:bold" id="today-score">0%</div>
+                    </div>
+                    
+                    <div id="prayer-tracker-list">
+                    </div>
+                </div>
+                
+                <div style="background:var(--card-bg); border-radius:15px; padding:15px; margin-bottom:15px">
+                    <div style="font-weight:bold; margin-bottom:10px">📈 إحصائيات الأسبوع</div>
+                    <div id="prayer-chart" style="width:100%; height:200px"></div>
+                </div>
+                
+                <div class="tracker-controls" style="display:flex; gap:10px">
+                    <button onclick="resetTodayPrayers()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-redo"></i> إعادة تعيين اليوم
+                    </button>
+                    <button onclick="viewStats()" class="btn-outline" style="flex:1">
+                        <i class="fas fa-chart-bar"></i> الإحصائيات
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. الإعدادات -->
+        <div id="page-settings" class="page-container page">
+            <h2 class="section-title">⚙️ الإعدادات</h2>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-volume-up"></i> صوت الأذان</span>
+                <label class="switch">
+                    <input type="checkbox" id="adhan-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-mouse-pointer"></i> صوت النقرات</span>
+                <label class="switch">
+                    <input type="checkbox" id="click-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-vibrate"></i> الاهتزاز</span>
+                <label class="switch">
+                    <input type="checkbox" id="vibrate-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-bell"></i> تنبيهات الصلاة</span>
+                <label class="switch">
+                    <input type="checkbox" id="notification-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-thermometer-half"></i> عرض الطقس</span>
+                <label class="switch">
+                    <input type="checkbox" id="weather-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <span><i class="fas fa-compass"></i> تحديد الموقع التلقائي</span>
+                <label class="switch">
+                    <input type="checkbox" id="geolocation-toggle" onchange="toggleGeolocation()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+    <span><i class="fas fa-calculator"></i> طريقة الحساب</span>
+    <select id="method-select" style="width:150px" onchange="changeCalculationMethod()">
+    </select>
+</div>
+
+            
+            <!-- قائمة الصفحات الإضافية -->
+            <div style="margin-top:30px">
+                <h3 class="section-title">📚 الصفحات الإضافية</h3>
+                <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px">
+ <div class="nav-sub-item" data-page="quran" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+        <i class="fas fa-book-open" style="font-size:1.5rem; margin-bottom:5px; color:var(--accent)"></i>
+        <div>القرآن الكريم</div>
+    </div>
+                    <div class="nav-sub-item" data-page="dua" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+                        <i class="fas fa-hands-praying" style="font-size:1.5rem; margin-bottom:5px"></i>
+                        <div>الأدعية</div>
+                    </div>
+                    <div class="nav-sub-item" data-page="quiz" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+                        <i class="fas fa-trophy" style="font-size:1.5rem; margin-bottom:5px"></i>
+                        <div>المسابقات</div>
+                    </div>
+                    <div class="nav-sub-item" data-page="prayer-tracker" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+                        <i class="fas fa-chart-line" style="font-size:1.5rem; margin-bottom:5px"></i>
+                        <div>متتبع الصلاة</div>
+                    </div>
+                    <div class="nav-sub-item" data-page="greetings" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+                        <i class="fas fa-gift" style="font-size:1.5rem; margin-bottom:5px"></i>
+                        <div>بطاقات</div>
+                    </div>
+                    <div class="nav-sub-item" data-page="events" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+                        <i class="fas fa-calendar-day" style="font-size:1.5rem; margin-bottom:5px"></i>
+                        <div>المناسبات</div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-sub-item" data-page="khatmah" style="background:var(--card-bg); padding:15px; border-radius:10px; text-align:center; cursor:pointer">
+    <i class="fas fa-quran" style="font-size:1.5rem; margin-bottom:5px; color:#2ECC71"></i>
+    <div>الختمة</div>
+</div>
+
+            <!-- قسم تثبيت التطبيق كـ PWA -->
+            <div style="margin-top:30px">
+                <h3 class="section-title">📱 تثبيت التطبيق</h3>
+                
+                <div class="settings-option" style="flex-direction:column; align-items:flex-start;">
+                    <div style="font-weight:bold; margin-bottom:10px; color:var(--accent)">
+                        <i class="fas fa-mobile-alt"></i> إضافة إلى الشاشة الرئيسية
+                    </div>
+                    <div style="font-size:0.9rem; opacity:0.8; margin-bottom:15px">
+                        يمكنك إضافة هذا التطبيق كتطبيق على هاتفك دون الحاجة لتحميله من المتجر
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:15px; width:100%">
+                        <div style="background:var(--card-bg); padding:12px; border-radius:10px; border-right:3px solid #4CAF50">
+                            <div style="font-weight:bold; color:#4CAF50; margin-bottom:5px">
+                                <i class="fab fa-android"></i> للأندرويد:
+                            </div>
+                            <div style="font-size:0.85rem">
+                                1. افتح القائمة (النقاط الثلاث) أعلى المتصفح<br>
+                                2. اختر "إضافة إلى الشاشة الرئيسية"<br>
+                                3. اضغط على "إضافة"
+                            </div>
+                        </div>
+                        
+                        <div style="background:var(--card-bg); padding:12px; border-radius:10px; border-right:3px solid #007AFF">
+                            <div style="font-weight:bold; color:#007AFF; margin-bottom:5px">
+                                <i class="fab fa-apple"></i> للآيفون:
+                            </div>
+                            <div style="font-size:0.85rem">
+                                1. افتح قائمة المشاركة في سفاري (مربع السهم)<br>
+                                2. اسفل للأسفل واختر "أضف إلى الشاشة الرئيسية"<br>
+                                3. اضغط على "إضافة"
+                            </div>
+                        </div>
+                        
+                        <button onclick="triggerPWAInstall()" class="btn-outline" style="width:100%; background:var(--accent); color:var(--bg-color); border:none">
+                            <i class="fas fa-download"></i> تثبيت التطبيق الآن
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top:30px;">
+                <button onclick="saveSettings()" class="btn-outline" style="width:100%">
+                    <i class="fas fa-save"></i> حفظ الإعدادات
+                </button>
+                <button onclick="exportAllData()" class="btn-outline" style="width:100%; margin-top:10px;">
+                    <i class="fas fa-download"></i> تصدير جميع البيانات
+                </button>
+                <button onclick="resetApp()" class="btn-outline" style="width:100%; margin-top:10px; border-color:#ff4444; color:#ff4444">
+                    <i class="fas fa-trash"></i> إعادة الضبط
+                </button>
+            </div>
+            
+            <div style="text-align:center; margin-top:30px; opacity:0.6; font-size:0.8rem">
+             مؤذن  البوب <br>
+                © 2025 جميع الحقوق محفوظة
+<br>
+                <br>
+                برمجة وتطوير إيهاب  محمد فكري
+            </div>
+        </div>
+
+        <!-- الشريط السفلي الثابت -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="navTo('home')">
+                <i class="fas fa-home"></i><span>الرئيسية</span>
+            </div>
+            <div class="nav-item" onclick="navTo('calendar')">
+                <i class="fas fa-calendar-alt"></i><span>التقويم</span>
+            </div>
+            <div class="nav-item" onclick="navTo('qibla')">
+                <i class="fas fa-compass"></i><span>القبلة</span>
+            </div>
+            <div class="nav-item" onclick="navTo('athkar')">
+                <i class="fas fa-fingerprint"></i><span>الأذكار</span>
+            </div>
+            <div class="nav-item" onclick="navTo('live')">
+                <i class="fas fa-video"></i><span>بث مباشر</span>
+            </div>
+            <div class="nav-item" onclick="navTo('quran')">
+    <i class="fas fa-book-open"></i><span>القرآن</span>
+</div>
+
+
+            <div class="nav-item" onclick="navTo('settings')">
+                <i class="fas fa-cog"></i><span>المزيد</span>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // ==================== المتغيرات العامة ====================
+        
+    </script>
+      <div id="setup-modal" class="setup-overlay" style="display: none;">
+        <div class="setup-card">
+            <div class="setup-header">
+                <i class="fas fa-kaaba fa-3x" style="color: var(--accent);"></i>
+                <h2>مرحباً بك في المؤذن</h2>
+                <p>لنقم بضبط الإعدادات في ثوانٍ</p>
+            </div>
+
+            <div class="setup-step">
+    <label><i class="fas fa-map-marker-alt"></i> تحديد الموقع</label>
+    
+    <div class="location-search-box">
+        <button onclick="SetupManager.useGPS()" class="btn-gps pulse-btn" title="تحديد تلقائي">
+            <i class="fas fa-crosshairs"></i>
+        </button>
+        <input type="text" id="city-search" placeholder="اكتب اسم مدينتك..." oninput="SetupManager.searchCity(this.value)">
+    </div>
+    
+    <div class="input-hint">
+        اضغط على الزر لتحديد موقعك تلقائياً، أو ابحث بكتابة الاسم يدوياً.
+    </div>
+
+    <div id="search-results" class="search-results" style="display: none;"></div>
+    
+    <div id="selected-location-display" style="font-size: 0.8rem; color: var(--accent); margin-top: 5px; font-weight: bold;"></div>
+</div>
+
+
+
+            <div class="setup-step" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <label style="margin:0"><i class="fas fa-volume-up"></i> تفعيل صوت الأذان</label>
+                <label class="switch">
+                    <input type="checkbox" id="setup-sound-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setup-step">
+    <label><i class="fas fa-calculator"></i> طريقة الحساب</label>
+    <select id="setup-method">
+    </select>
+</div>
+
+
+           <div class="setup-step">
+    <label><i class="fas fa-palette"></i> اختر مظهر التطبيق</label>
+    <div class="theme-grid" id="setup-theme-grid">
+        <div class="theme-option" onclick="selectSetupTheme(this, 'kaaba')" style="background: #000;" title="الكعبة">🕋</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'medina')" style="background: #134E5E;" title="المدينة">🕌</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'royal')" style="background: #141E30;" title="ملكي">👑</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'paper')" style="background: #f5f5f5; border: 1px solid #ccc; color: #333;" title="ورقي">📄</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'midnight')" style="background: #151515;" title="ليلي">🌑</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'nature')" style="background: #0d3b2a;" title="طبيعة">🌿</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'ramadan')" style="background: #1a237e;" title="رمضان">🌙</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'hajj')" style="background: #8B0000;" title="حج">🕋</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'sunset')" style="background: linear-gradient(to right, #FF512F, #F09819);" title="غروب">🌅</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'ocean')" style="background: linear-gradient(to right, #2193b0, #6dd5ed);" title="محيط">🌊</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'desert')" style="background: linear-gradient(to right, #C02425, #F0CB35);" title="صحراء">🏜️</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'golden')" style="background: #1A1A1A; border: 1px solid gold;" title="ذهبي">🌟</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'sky')" style="background: #87CEEB;" title="سماء">🌤️</div>
+        <div class="theme-option" onclick="selectSetupTheme(this, 'purple-rain')" style="background: #4B0082;" title="أرجواني">💜</div>
+  <button onclick="SetupManager.finish()" class="btn-outline" style="width: 100%; margin-top: 25px; background: var(--accent); color: var(--bg-color); border: none; padding: 15px; font-size: 1.1rem;">
+    <i class="fas fa-check-circle"></i> حفظ وبدء الاستخدام
+</button>
+  </div>
+</div>
+</div> </div>
+
+
+
+
+<div id="surah-options-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="text-align: center; max-width: 350px;">
+        <div class="modal-header">
+            <h3 id="selected-surah-title" style="color: var(--accent); margin: 0;">سورة ...</h3>
+            <button onclick="document.getElementById('surah-options-modal').classList.remove('active'); document.getElementById('surah-options-modal').style.display='none'" class="close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 15px; opacity: 0.8;">اختر الطريقة المناسبة لك:</p>
+            <div class="options-grid">
+                <button onclick="QuranManager.confirmAction('listen')" class="option-btn">
+                    <i class="fas fa-headphones-alt"></i><span>استماع فقط</span>
+                </button>
+                <button onclick="QuranManager.confirmAction('read')" class="option-btn">
+                    <i class="fas fa-book-open"></i><span>قراءة فقط</span>
+                </button>
+                <button onclick="QuranManager.confirmAction('tafseer')" class="option-btn">
+                    <i class="fas fa-book-reader"></i><span>قراءة وتفسير</span>
+                </button>
+                <button onclick="QuranManager.confirmAction('sync')" class="option-btn">
+                    <i class="fas fa-compact-disc"></i><span>قراءة + استماع</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="quran-reader-view" class="reader-view" style="display:none;">
+    <div class="reader-header-sticky">
+        <button onclick="QuranManager.closeReader()" class="close-reader-btn">
+            <i class="fas fa-arrow-right"></i> خروج
+        </button>
+        <span id="reader-surah-name" style="font-size: 1rem;">سورة ...</span>
+        <div style="width: 30px;">
+            <button id="reader-stop-audio" onclick="QuranManager.stop()" style="background:none; border:none; color:red; display:none;">
+                <i class="fas fa-stop-circle fa-lg"></i>
+            </button>
+        </div> 
+    </div>
+
+    <div id="reader-content" class="reader-content"></div>
+    
+    <div id="mini-audio-player" class="mini-player-bar" style="display:none;">
+        <div style="font-size:0.8rem">جاري الاستماع...</div>
+        <div>
+            <button onclick="QuranManager.pause()" class="btn-outline" style="padding: 5px 10px; font-size:0.8rem"><i class="fas fa-pause"></i></button>
+            <button onclick="QuranManager.play()" class="btn-outline" style="padding: 5px 10px; font-size:0.8rem"><i class="fas fa-play"></i></button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    function selectSetupTheme(element, themeName) {
+        // إزالة التحديد من الجميع
+        document.querySelectorAll('#setup-theme-grid .theme-option').forEach(el => {
+            el.classList.remove('active');
+            el.style.transform = 'scale(1)';
+            el.style.borderColor = 'rgba(255,255,255,0.2)';
+        });
+        
+        // إضافة التحديد للعنصر المختار
+        element.classList.add('active');
+        element.dataset.theme = themeName; // نخزن الاسم لنستخدمه في الحفظ
+        element.style.transform = 'scale(1.2)';
+        element.style.borderColor = 'var(--accent)';
+        
+        // تغيير الثيم فوراً للمعاينة
+        ThemeManager.change(themeName);
+    }
+</script>
+
+
+
+
+</body>
+</html>
