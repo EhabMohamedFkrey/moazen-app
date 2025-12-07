@@ -1,20 +1,20 @@
 {
   "packageId": "com.moazen.app",
   "host": "moazen-app.netlify.app",
-  "name": "المؤذن الاحترافي",
+  "name": "المؤذن ",
   "launcherName": "المؤذن",
   "display": "standalone",
   "themeColor": "#d4af37",
   "navigationColor": "#141E30",
   "backgroundColor": "#141E30",
   "startUrl": "https://moazen-app.netlify.app/",
-  "iconUrl": "https://raw.githubusercontent.com/EhabMohamedFkrey/moazen-app/main/icon512.png",
-  "maskableIconUrl": "https://raw.githubusercontent.com/EhabMohamedFkrey/moazen-app/main/icon512.png",
+  "iconUrl": "https://moazen-app.netlify.app/icon512.png",
+"maskableIconUrl": "https://moazen-app.netlify.app/icon512.png",
   "appVersion": "1.0.0",
   "appVersionCode": 1,
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://raw.githubusercontent.com/EhabMohamedFkrey/moazen-app/main/manifest.json",
-  "fallbackType": "customtabs",
+  "webManifestUrl": "https://moazen-app.netlify.app/manifest.json",
+"fallbackType": "customtabs",
   "features": {
     "playBilling": {
       "enabled": false
