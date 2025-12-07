@@ -16,28 +16,27 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      # سنستخدم جافا 11 لأنها الأنسب والأكثر استقراراً مع كوردوفا 12
+      - name: Setup Java 11
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '11'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '16'
 
       - name: Install Cordova
         run: npm install -g cordova
 
-      # هذه الخطوة هي الحل الجذري: إعادة إنشاء package.json بنسخة سليمة تماماً
-      # نتجاوز بذلك أي خطأ في الملف الأصلي أو مشاكل الفواصل
-      - name: Force Clean package.json
+      # إعادة إنشاء ملف package.json لضمان نظافته (كما نجحنا في الخطوة السابقة)
+      - name: Reset package.json
         run: |
-          # حذف الملفات القديمة
           rm -rf node_modules package-lock.json plugins platforms package.json
           
-          # كتابة ملف package.json جديد ونظيف (بدون إضافة الإشعارات المعطوبة)
+          # نكتب ملف نظيف تماماً
           cat <<EOF > package.json
           {
             "name": "com.ehab.moazen",
@@ -54,11 +53,11 @@ jobs:
             "author": "Ehab Mohamed",
             "license": "Apache-2.0",
             "dependencies": {
-              "cordova-android": "^13.0.0",
+              "cordova-android": "^12.0.0",
               "cordova-plugin-android-permissions": "^1.1.5",
-              "cordova-plugin-device": "^3.0.0",
+              "cordova-plugin-device": "^2.1.0",
               "cordova-plugin-dialogs": "^2.0.2",
-              "cordova-plugin-geolocation": "^5.0.0"
+              "cordova-plugin-geolocation": "^4.1.0"
             },
             "cordova": {
               "plugins": {
@@ -80,32 +79,28 @@ jobs:
              echo "<html><body>App</body></html>" > www/index.html
           fi
           
-          # مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
       - name: Install Dependencies
         run: npm install
 
-      # تثبيت إضافة الإشعارات من مصدر موثوق (Moodle Fork) يعمل مع أندرويد 13
-      # استخدام git clone لتجنب أخطاء npm
+      # تثبيت نسخة (timbrussel) من الإشعارات لأنها الأفضل توافقاً مع كوردوفا 12
       - name: Install Notification Plugin
         run: |
-          git clone https://github.com/moodlemobile/cordova-plugin-local-notifications.git local-notifications-plugin
-          cordova plugin add ./local-notifications-plugin --save
+          git clone https://github.com/timbrussel/cordova-plugin-local-notifications.git local-plugin
+          cordova plugin add ./local-plugin --save
 
+      # التغيير الجذري: استخدام أندرويد 12 بدلاً من 13 لتفادي أخطاء Gradle الصارمة
       - name: Add Android Platform
-        run: cordova platform add android@13.0.0 --force
+        run: cordova platform add android@12.0.0 --force
 
-      # البناء مع إصلاحات التوافقية
+      # البناء (لاحظ أننا لا نحتاج لأعلام AndroidX المعقدة هنا)
       - name: Build APK
-        run: |
-          cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
+        run: cordova build android --debug --device
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Moazen-App
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-
