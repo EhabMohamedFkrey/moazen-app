@@ -1,66 +1,54 @@
-name: Build Android APK
+name: Build TWA APK
 
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+
+    # 1) Checkout repository
+    - name: Checkout repository
       uses: actions/checkout@v3
 
+    # 2) Setup Node.js (bubblewrap يحتاج Node)
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
 
-    # تحسين: تفعيل الكاش لملفات Gradle لتسريع بناء الأندرويد
-    - name: Setup Java
+    # 3) Setup Java (الـ Android SDK يحتاج JDK 17)
+    - name: Setup Java 17
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
-        cache: 'gradle' # هذا السطر سيوفر وقت تحميل مكتبات أندرويد
 
-    # تحسين: كاش لمجلد Bubblewrap لتجنب تحميل الأدوات الخاصة به كل مرة
-    - name: Cache Bubblewrap
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.bubblewrap
-          ~/.android/build-cache
-        key: ${{ runner.os }}-bubblewrap-${{ hashFiles('twa-manifest.json') }}
-        restore-keys: |
-          ${{ runner.os }}-bubblewrap-
-
+    # 4) Install Bubblewrap CLI
     - name: Install Bubblewrap
-      run: sudo npm install -g @bubblewrap/cli
-
-    - name: Initialize & Build APK
       run: |
-        # ربط Bubblewrap بـ Android SDK الموجود في السيرفر لتوفير الوقت
-        export ANDROID_HOME=$ANDROID_SDK_ROOT
-        
-        # إنشاء ملف المفاتيح (Keystore)
-        # ملاحظة: للأمان مستقبلاً يفضل استخدام GitHub Secrets
-        keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
-        
-        # تهيئة Bubblewrap في حالة لم يكن مهيأ (باستخدام yes للموافقة التلقائية)
-        # تم إزالة أمر المسح rm -rf للاستفادة من الكاش
-        yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+        npm install -g @bubblewrap/cli
 
-    - name: Sign APK
-      continue-on-error: true
+    # 5) Create Bubblewrap project (لو موجود لن يعيد كتابته)
+    - name: Init Bubblewrap Project
       run: |
-        jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
+        bubblewrap init --manifest=https://moazen-app.netlify.app/manifest.json || true
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
+    # 6) Update project using twa-manifest.json
+    - name: Update Bubblewrap Project
+      run: |
+        bubblewrap update --manifest=twa-manifest.json
+
+    # 7) Build APK
+    - name: Build APK
+      run: |
+        bubblewrap build --skipSigning
+
+    # 8) Upload generated APK
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v3
       with:
         name: app-release
-        path: app-release-signed.apk
+        path: build/app-release-signed.apk
