@@ -16,6 +16,7 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      # استخدام جافا 17 المتوافق مع أندرويد 13 وكوردوفا 13
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -30,48 +31,34 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # هذه الخطوة المجمعة ستحل المشكلة بطريقة يدوية مضمونة
-      - name: Fix Dependencies & Build
+      # تم تعديل هذه الخطوة: حذفنا الأمر الذي يمسح مجلد www وأوامر النقل لأن الملفات مكانها صحيح
+      - name: Prepare Environment
         run: |
-          # 1. تنظيف البيئة تماماً
-          rm -rf node_modules package-lock.json plugins platforms
+          # حذف أي ملفات بناء سابقة أو مكاتب قد تسبب تعارض (بدون حذف www)
+          rm -rf platforms plugins node_modules package-lock.json
           
-          # 2. إصلاح package.json (حذف الإضافة المعطوبة برمجياً لمنع أخطاء JSON)
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
-            if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          "
+          # التأكد من وجود مجلد www (للاطمئنان فقط)
+          if [ ! -d "www" ]; then
+            echo "Error: www directory not found in the repository!"
+            exit 1
+          fi
           
-          # 3. التأكد من وجود مجلد www
-          mkdir -p www
+          # إنشاء مجلد الأيقونات لتجنب توقف البناء في حالة عدم وجوده
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-          # 4. تثبيت المكتبات الأساسية (الآن سينجح لأننا حذفنا الإضافة السيئة)
-          npm install
+      - name: Install Dependencies
+        run: npm install
 
-          # 5. الحل السحري: تحميل الإضافة يدوياً باستخدام git clone
-          # هذا يتجاوز مشاكل كوردوفا في التحميل
-          echo "Cloning plugin manually..."
-          git clone https://github.com/timbrussel/cordova-plugin-local-notifications.git local-plugin-fix
+      # إضافة منصة أندرويد
+      - name: Add Android Platform
+        run: cordova platform add android@13.0.0 --force
 
-          # 6. تثبيت الإضافة من المجلد المحلي الذي حملناه
-          echo "Installing plugin from local folder..."
-          cordova plugin add ./local-plugin-fix --save
-
-          # 7. إضافة منصة أندرويد
-          cordova platform add android@13.0.0 --force
-
-          # 8. بناء التطبيق
-          cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
+      - name: Build APK
+        run: cordova build android --debug --device
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Moazen-App
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-
