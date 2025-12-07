@@ -19,33 +19,40 @@ jobs:
       with:
         node-version: '18'
 
-    # نحتاج الجافا هنا فقط من أجل أوامر keytool و jarsigner في الأسفل
-    - name: Setup Java for Signing
+    - name: Setup Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Bubblewrap CLI
+    - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
+
+    - name: Prepare Files
+      run: |
+        # التأكد من وجود الأيقونة
+        if [ -f "icon512.png" ]; then
+          echo "Icon found!"
+        else
+          echo "Error: icon512.png not found!"
+          exit 1
+        fi
 
     - name: Build APK
       run: |
-        # حذف أي إعدادات سابقة قد تكون فاسدة
         rm -rf $HOME/.bubblewrap
-
-        # إنشاء مفاتيح التوقيع
+        
+        # إنشاء المفاتيح
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # الأمر السحري: نستخدم "yes" للموافقة على تحميل JDK و Android SDK تلقائياً
-        # سيقوم بتحميل أدواته الخاصة وسيعمل بنجاح بإذن الله
+        # أمر البناء مع الموافقة التلقائية
         yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
     - name: Sign APK
       run: |
         jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: moazen-app-apk
