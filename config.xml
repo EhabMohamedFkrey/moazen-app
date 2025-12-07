@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.ehab.moazen" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>المؤذن</name>
+    <description>تطبيق المؤذن الإسلامي الشامل</description>
+    <author email="dev@example.com" href="http://example.com">Ehab Mohamed</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    
+    <preference name="AndroidLaunchMode" value="singleTop" />
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="BackgroundColor" value="0xff000000" />
+    
+    <platform name="android">
+        <allow-intent href="market:*" />
+        
+        <resource-file src="www/adhan.mp3" target="app/src/main/res/raw/adhan.mp3" />
+
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+            <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        </config-file>
+    </platform>
+</widget>
