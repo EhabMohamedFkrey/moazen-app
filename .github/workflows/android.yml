@@ -16,7 +16,6 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # استخدام جافا 17 (ضروري لأندرويد 13 وكوردوفا 13)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -31,28 +30,30 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # تنظيف وترتيب الملفات
+      # تنظيف البيئة
       - name: Prepare Environment
         run: |
           rm -rf platforms plugins node_modules package-lock.json
           
-          # التأكد من وجود مجلد www
           if [ ! -d "www" ]; then
-            echo "Error: www directory not found in the repository!"
+            echo "Error: www directory not found!"
             exit 1
           fi
           
-          # إنشاء مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      # خطوة إضافية هامة: إصلاح ملف package.json لاستبدال الإضافة المعطوبة
-      - name: Fix Broken Plugins
+      # الإصلاح الجديد: إجبار النظام على استخدام HTTPS وتصحيح الرابط
+      - name: Fix Plugins & Git Protocol
         run: |
-          # استبدال إضافة الإشعارات القديمة (katzer) بنسخة (timbrussel) المتوافقة مع أندرويد 13
-          sed -i 's|git+https://github.com/katzer/cordova-plugin-local-notifications.git|https://github.com/timbrussel/cordova-plugin-local-notifications|g' package.json
+          # هذا الأمر يمنع خطأ SSH Permission Denied
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+
+          # استبدال الإضافة برابط git+https الصحيح تماماً
+          sed -i 's|git+https://github.com/katzer/cordova-plugin-local-notifications.git|git+https://github.com/timbrussel/cordova-plugin-local-notifications.git|g' package.json
           
-          echo "تم تحديث package.json لاستخدام نسخة متوافقة من الإشعارات"
+          echo "تم تحديث إعدادات Git ورابط الإضافة بنجاح"
 
       - name: Install Dependencies
         run: npm install
@@ -60,7 +61,6 @@ jobs:
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
-      # إضافة إعدادات Gradle لحل مشاكل AndroidX بشكل نهائي
       - name: Build APK
         run: |
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
