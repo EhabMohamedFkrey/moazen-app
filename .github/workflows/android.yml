@@ -13,83 +13,91 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. جلب الكود
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # 2. إعداد جافا 17 (إجباري لأندرويد 13)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. إعداد Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 4. تثبيت كوردوفا
       - name: Install Cordova
         run: npm install -g cordova
 
-      # 5. الخطوة الحاسمة: تنظيف package.json من الإضافة الخاطئة
-      # نستخدم سكربت Node.js لضمان عدم حدوث خطأ في الفواصل (JSON Error)
-      - name: Sanitize package.json
+      # هذه الخطوة هي الحل الجذري: إعادة إنشاء package.json بنسخة سليمة تماماً
+      # نتجاوز بذلك أي خطأ في الملف الأصلي أو مشاكل الفواصل
+      - name: Force Clean package.json
         run: |
-          node -e "
-            const fs = require('fs');
-            try {
-              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              
-              // حذف الإضافة القديمة تماماً من القوائم
-              if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
-              if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
-              
-              // حفظ الملف نظيفاً
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-              console.log('Successfully removed broken plugin from package.json');
-            } catch (e) {
-              console.error(e);
-              process.exit(1);
-            }
-          "
-
-      # 6. تجهيز المجلدات (لحل مشكلة Source path does not exist)
-      - name: Prepare Directories
-        run: |
-          # حذف أي مجلدات قديمة
-          rm -rf node_modules package-lock.json plugins platforms
+          # حذف الملفات القديمة
+          rm -rf node_modules package-lock.json plugins platforms package.json
           
-          # التأكد من وجود مجلد www
+          # كتابة ملف package.json جديد ونظيف (بدون إضافة الإشعارات المعطوبة)
+          cat <<EOF > package.json
+          {
+            "name": "com.ehab.moazen",
+            "displayName": "المؤذن",
+            "version": "1.0.0",
+            "description": "Professional Azan App",
+            "main": "index.js",
+            "scripts": {
+              "test": "echo \"Error: no test specified\" && exit 1"
+            },
+            "keywords": [
+              "ecosystem:cordova"
+            ],
+            "author": "Ehab Mohamed",
+            "license": "Apache-2.0",
+            "dependencies": {
+              "cordova-android": "^13.0.0",
+              "cordova-plugin-android-permissions": "^1.1.5",
+              "cordova-plugin-device": "^3.0.0",
+              "cordova-plugin-dialogs": "^2.0.2",
+              "cordova-plugin-geolocation": "^5.0.0"
+            },
+            "cordova": {
+              "plugins": {
+                "cordova-plugin-device": {},
+                "cordova-plugin-dialogs": {},
+                "cordova-plugin-geolocation": {},
+                "cordova-plugin-android-permissions": {}
+              },
+              "platforms": [
+                "android"
+              ]
+            }
+          }
+          EOF
+          
+          # التأكد من مجلد www
           if [ ! -d "www" ]; then
-            mkdir www
-            echo "<html><body>App</body></html>" > www/index.html
+             mkdir www
+             echo "<html><body>App</body></html>" > www/index.html
           fi
           
-          # إنشاء مجلد الأيقونات
+          # مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      # 7. تثبيت المكتبات (الآن سينجح لأننا حذفنا الرابط المعطوب)
-      - name: Install Base Dependencies
+      - name: Install Dependencies
         run: npm install
 
-      # 8. تثبيت الإضافة السليمة يدوياً (لتجاوز مشاكل الشبكة)
-      - name: Install Correct Plugin Manually
+      # تثبيت إضافة الإشعارات من مصدر موثوق (Moodle Fork) يعمل مع أندرويد 13
+      # استخدام git clone لتجنب أخطاء npm
+      - name: Install Notification Plugin
         run: |
-          echo "Cloning fixed plugin..."
-          git clone https://github.com/timbrussel/cordova-plugin-local-notifications.git fixed-plugin
-          
-          echo "Installing plugin from local folder..."
-          cordova plugin add ./fixed-plugin --save
+          git clone https://github.com/moodlemobile/cordova-plugin-local-notifications.git local-notifications-plugin
+          cordova plugin add ./local-notifications-plugin --save
 
-      # 9. إضافة منصة أندرويد
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
-      # 10. بناء التطبيق (مع حل مشاكل AndroidX)
+      # البناء مع إصلاحات التوافقية
       - name: Build APK
         run: |
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
@@ -99,3 +107,5 @@ jobs:
         with:
           name: Moazen-App
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+
+
