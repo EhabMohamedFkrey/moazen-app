@@ -8,12 +8,12 @@
   "navigationColor": "#141E30",
   "backgroundColor": "#141E30",
   "startUrl": "/",
-  "iconUrl": "./icon512.png",
-  "maskableIconUrl": "./icon512.png",
+  "iconUrl": "icon512.png",
+  "maskableIconUrl": "icon512.png",
   "appVersion": "1.0.0",
   "appVersionCode": 1,
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "./manifest.json",
+  "webManifestUrl": "manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "playBilling": {
