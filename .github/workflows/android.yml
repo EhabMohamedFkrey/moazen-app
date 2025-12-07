@@ -34,33 +34,39 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # 5. خطوة الإصلاح الذكي (Smart Fix)
-      # نستخدم سكربت Node.js لتنظيف ملف package.json برمجياً وليس نصياً
-      # هذا يضمن 100% عدم فساد الملف
-      - name: Clean package.json
+      # 5. خطوة الإصلاح الذكي (Smart Fix) - الأهم
+      # نستخدم سكربت Node.js لتنظيف ملف package.json برمجياً
+      # هذا يضمن 100% عدم فساد الملف (JSON Error)
+      - name: Clean package.json safely
         run: |
+          # حذف الملفات المؤقتة القديمة
           rm -rf node_modules package-lock.json plugins platforms
           
+          # سكربت جافاسكريبت صغير لتعديل ملف الباكيج بأمان تام
           node -e "
             const fs = require('fs');
             try {
               // قراءة الملف
               const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
               
-              // حذف الإضافة المسببة للمشاكل من القائمة تماماً
-              if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
-              if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+              // حذف الإضافة القديمة من القائمة تماماً
+              if (pkg.dependencies) {
+                delete pkg.dependencies['cordova-plugin-local-notification'];
+              }
+              if (pkg.cordova && pkg.cordova.plugins) {
+                delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+              }
               
               // حفظ الملف نظيفاً وسليماً
               fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-              console.log('package.json cleaned successfully');
-            } catch (error) {
-              console.error('Error cleaning package.json:', error);
+              console.log('Successfully cleaned package.json');
+            } catch (e) {
+              console.error('Error cleaning package.json:', e);
               process.exit(1);
             }
           "
 
-      # 6. تجهيز المجلدات الضرورية
+      # 6. التأكد من المجلدات
       - name: Prepare Directories
         run: |
           # التأكد من وجود مجلد www
@@ -73,12 +79,12 @@ jobs:
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      # 7. تثبيت المكتبات الأساسية (الآن لن يحدث خطأ لأننا حذفنا الإضافة التالفة)
+      # 7. تثبيت المكتبات الأساسية (الآن الملف نظيف ولن يحدث خطأ)
       - name: Install Base Dependencies
         run: npm install
 
       # 8. تثبيت إضافة الإشعارات الصحيحة يدوياً
-      # استخدام https مباشرة يمنع مشاكل SSH Error 128
+      # استخدام https مباشرة يمنع مشاكل SSH
       - name: Install Fixed Notification Plugin
         run: cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git --save
 
