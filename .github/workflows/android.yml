@@ -16,7 +16,6 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      # استخدام جافا 17 المتوافق مع أندرويد 13 وكوردوفا 13
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -28,37 +27,110 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Cordova
-        run: npm install -g cordova
+      - name: Install Cordova and Dependencies
+        run: |
+          npm install -g cordova@11.0.0
+          npm install -g cordova-res
 
-      # تم تعديل هذه الخطوة: حذفنا الأمر الذي يمسح مجلد www وأوامر النقل لأن الملفات مكانها صحيح
       - name: Prepare Environment
         run: |
-          # حذف أي ملفات بناء سابقة أو مكاتب قد تسبب تعارض (بدون حذف www)
-          rm -rf platforms plugins node_modules package-lock.json
+          # تنظيف شامل
+          rm -rf platforms plugins node_modules www package-lock.json
           
-          # التأكد من وجود مجلد www (للاطمئنان فقط)
+          # تأكد من وجود مجلد www
           if [ ! -d "www" ]; then
-            echo "Error: www directory not found in the repository!"
-            exit 1
+            echo "Creating www directory..."
+            mkdir www
+            echo '<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>المؤذن</title>
+            </head>
+            <body>
+                <h1>Professional Azan App</h1>
+                <p>Loading...</p>
+            </body>
+            </html>' > www/index.html
           fi
           
-          # إنشاء مجلد الأيقونات لتجنب توقف البناء في حالة عدم وجوده
+          # إنشاء أيقونات افتراضية
           mkdir -p res/android/icon/
-          touch res/android/icon/ldpi.png
+          mkdir -p res/android/screen/
+          
+          # إنشاء أيقونة افتراضية باستخدام ImageMagick
+          apt-get update && apt-get install -y imagemagick
+          convert -size 36x36 xc:#4CAF50 res/android/icon/ldpi.png
+          convert -size 48x48 xc:#4CAF50 res/android/icon/mdpi.png
+          convert -size 72x72 xc:#4CAF50 res/android/icon/hdpi.png
+          convert -size 96x96 xc:#4CAF50 res/android/icon/xhdpi.png
+          convert -size 144x144 xc:#4CAF50 res/android/icon/xxhdpi.png
+          convert -size 192x192 xc:#4CAF50 res/android/icon/xxxhdpi.png
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install NPM Dependencies
+        run: |
+          # تثبيت الاعتماديات
+          npm install
+          
+          # إصلاح إصدارات محددة للمكونات الإضافية
+          npm uninstall cordova-android --save
+          npm install cordova-android@10.1.2 --save
+          
+          npm uninstall cordova-plugin-geolocation --save
+          npm install cordova-plugin-geolocation@4.1.0 --save
+          
+          npm uninstall cordova-plugin-device --save
+          npm install cordova-plugin-device@2.1.0 --save
 
-      # إضافة منصة أندرويد
       - name: Add Android Platform
-        run: cordova platform add android@13.0.0 --force
+        run: |
+          # إزالة أي منصة سابقة
+          cordova platform rm android 2>/dev/null || true
+          
+          # إضافة المنصة
+          cordova platform add android@10.1.2 --force
+
+      - name: Add Required Plugins
+        run: |
+          # إزالة المكونات الإضافية السابقة
+          cordova plugin rm cordova-plugin-local-notification 2>/dev/null || true
+          cordova plugin rm cordova-plugin-android-permissions 2>/dev/null || true
+          cordova plugin rm cordova-plugin-geolocation 2>/dev/null || true
+          cordova plugin rm cordova-plugin-device 2>/dev/null || true
+          cordova plugin rm cordova-plugin-dialogs 2>/dev/null || true
+          
+          # إضافة المكونات الإضافية
+          cordova plugin add cordova-plugin-device@2.1.0
+          cordova plugin add cordova-plugin-dialogs@2.0.2
+          cordova plugin add cordova-plugin-geolocation@4.1.0
+          cordova plugin add cordova-plugin-android-permissions@1.1.5
+          
+          # استخدام إصدار محدد من local-notification
+          cordova plugin add https://github.com/katzer/cordova-plugin-local-notifications#0.9.0-beta.3
+
+      - name: Configure Build Settings
+        run: |
+          # إنشاء ملف config.xml إذا لم يكن موجوداً
+          if [ ! -f "config.xml" ]; then
+            cordova create . com.ehab.moazen "المؤذن"
+          fi
+          
+          # إعدادات البناء
+          cordova config set --android-minSdkVersion 22
+          cordova config set --android-targetSdkVersion 31
 
       - name: Build APK
-        run: cordova build android --debug --device
+        run: |
+          # تنظيف وبناء
+          cordova clean
+          cordova build android --debug --device --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Moazen-App
-          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          name: Moazen-App-APK
+          path: |
+            platforms/android/app/build/outputs/apk/debug/*.apk
+            platforms/android/app/build/outputs/apk/release/*.apk
+          retention-days: 7
