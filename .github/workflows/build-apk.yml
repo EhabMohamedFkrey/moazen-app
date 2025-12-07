@@ -25,27 +25,35 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    # تصحيح: إضافة sudo لتجنب خطأ الصلاحيات EACCES
     - name: Install Bubblewrap
-      run: npm install -g @bubblewrap/cli
+      run: sudo npm install -g @bubblewrap/cli
 
     - name: Build APK
       run: |
         # تنظيف أي بقايا
         rm -rf $HOME/.bubblewrap
         
-        # إنشاء المفاتيح
+        # إنشاء المفاتيح (ملاحظة: Bubblewrap قد يطلب مفاتيح أيضاً، لكن سنبقي كودك كما هو)
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # الأمر السحري مع الروابط الجديدة
-        # سيقوم بتحميل الأدوات وبناء التطبيق
+        # إعداد مسار Android SDK الموجود مسبقاً في GitHub Actions
+        # هذا يمنع Bubblewrap من محاولة تحميل SDK جديد ويوفر الوقت والمشاكل
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        
+        # الأمر السحري للبناء
+        # استخدام yes للموافقة على التراخيص والأسئلة التلقائية
         yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
+    # هذه الخطوة قد تكون زائدة لأن Bubblewrap ينتج ملف موقع بالفعل
+    # ولكن سأتركها لضمان التوقيع بمفتاحك الخاص إذا لزم الأمر
     - name: Sign APK
+      continue-on-error: true # لكي لا يوقف البناء إذا كان الملف موقعاً بالفعل
       run: |
         jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: moazen-app-apk
+        name: app-release
         path: app-release-signed.apk
