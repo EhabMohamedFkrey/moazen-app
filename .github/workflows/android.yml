@@ -13,76 +13,85 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. جلب الكود المصدري
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      # 2. إعداد جافا 17 (مطلوب لأندرويد 13)
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # 3. إعداد Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 4. تثبيت كوردوفا
       - name: Install Cordova
         run: npm install -g cordova
 
-      # هذه هي الخطوة السحرية التي تحل المشكلة دون كسر ملف JSON
-      - name: Fix package.json safely
+      # 5. خطوة الإصلاح الذكي (Smart Fix)
+      # نستخدم سكربت Node.js لتنظيف ملف package.json برمجياً وليس نصياً
+      # هذا يضمن 100% عدم فساد الملف
+      - name: Clean package.json
         run: |
-          # تنظيف الملفات القديمة
           rm -rf node_modules package-lock.json plugins platforms
           
-          # استخدام Node.js لتعديل الملف بذكاء وحذف الإضافة المعطوبة دون ترك فواصل زائدة
           node -e "
             const fs = require('fs');
             try {
+              // قراءة الملف
               const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              // حذف إضافة الإشعارات القديمة من dependencies
-              if (pkg.dependencies) {
-                delete pkg.dependencies['cordova-plugin-local-notification'];
-              }
-              // حذفها من إعدادات كوردوفا أيضاً لتجنب أي تعارض
-              if (pkg.cordova && pkg.cordova.plugins) {
-                delete pkg.cordova.plugins['cordova-plugin-local-notification'];
-              }
-              // حفظ الملف بتنسيق سليم تماماً
+              
+              // حذف الإضافة المسببة للمشاكل من القائمة تماماً
+              if (pkg.dependencies) delete pkg.dependencies['cordova-plugin-local-notification'];
+              if (pkg.cordova && pkg.cordova.plugins) delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+              
+              // حفظ الملف نظيفاً وسليماً
               fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-              console.log('Successfully cleaned package.json');
-            } catch (e) {
-              console.error('Error fixing package.json:', e);
+              console.log('package.json cleaned successfully');
+            } catch (error) {
+              console.error('Error cleaning package.json:', error);
               process.exit(1);
             }
           "
-          
+
+      # 6. تجهيز المجلدات الضرورية
+      - name: Prepare Directories
+        run: |
           # التأكد من وجود مجلد www
           if [ ! -d "www" ]; then
-             mkdir www
+            mkdir www
+            echo "Created missing www directory"
           fi
           
-          # إنشاء مجلد الأيقونات
+          # إنشاء مجلد الأيقونات لتجنب توقف البناء
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      - name: Install Dependencies
-        run: |
-          # تثبيت المكتبات الأساسية (الآن الملف سليم ولن يحدث خطأ JSON)
-          npm install
-          
-          # تثبيت نسخة الإشعارات السليمة (TimBrussel) المتوافقة مع أندرويد 13
-          cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git
+      # 7. تثبيت المكتبات الأساسية (الآن لن يحدث خطأ لأننا حذفنا الإضافة التالفة)
+      - name: Install Base Dependencies
+        run: npm install
 
+      # 8. تثبيت إضافة الإشعارات الصحيحة يدوياً
+      # استخدام https مباشرة يمنع مشاكل SSH Error 128
+      - name: Install Fixed Notification Plugin
+        run: cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git --save
+
+      # 9. إضافة منصة أندرويد
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
+      # 10. بناء التطبيق مع تفعيل التوافقية (AndroidX)
       - name: Build APK
         run: |
-          # استخدام أعلام Gradle لحل مشاكل AndroidX و Jetifier
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
 
+      # 11. رفع الملف النهائي
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
