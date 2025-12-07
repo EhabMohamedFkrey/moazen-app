@@ -30,15 +30,15 @@ jobs:
 
     - name: Initialize Android Project
       run: |
-        # إنشاء ملف مفاتيح توقيع مؤقت (لأغراض التطوير)
+        # إنشاء ملف مفاتيح توقيع مؤقت
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # بناء مشروع الأندرويد باستخدام الإعدادات
-        bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+        # التعديل هنا: نرسل حرف "n" للأمر لكي لا يطلب تحميل الجافا مرة أخرى
+        echo "n" | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
     - name: Sign APK
       run: |
-        # توقيع التطبيق بالمفتاح المؤقت
+        # توقيع التطبيق
         jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
     - name: Upload APK Artifact
