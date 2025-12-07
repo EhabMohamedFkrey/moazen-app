@@ -28,24 +28,16 @@ jobs:
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
 
-    - name: Prepare Files
-      run: |
-        # التأكد من وجود الأيقونة
-        if [ -f "icon512.png" ]; then
-          echo "Icon found!"
-        else
-          echo "Error: icon512.png not found!"
-          exit 1
-        fi
-
     - name: Build APK
       run: |
+        # تنظيف أي بقايا
         rm -rf $HOME/.bubblewrap
         
         # إنشاء المفاتيح
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # أمر البناء مع الموافقة التلقائية
+        # الأمر السحري مع الروابط الجديدة
+        # سيقوم بتحميل الأدوات وبناء التطبيق
         yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
     - name: Sign APK
