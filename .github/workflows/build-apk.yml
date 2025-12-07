@@ -28,17 +28,23 @@ jobs:
     - name: Install Bubblewrap CLI
       run: npm install -g @bubblewrap/cli
 
+    - name: Configure Bubblewrap Paths
+      run: |
+        # هذه الخطوة هي الحل: ننشئ ملف إعدادات نخبر فيه الأداة بمسارات الأدوات الموجودة في السيرفر
+        mkdir -p $HOME/.bubblewrap
+        echo "{\"jdkPath\": \"$JAVA_HOME\", \"androidSdkPath\": \"$ANDROID_SDK_ROOT\"}" > $HOME/.bubblewrap/config.json
+        echo "تم تكوين مسارات الجافا والأندرويد بنجاح"
+
     - name: Initialize Android Project
       run: |
         # إنشاء ملف مفاتيح توقيع مؤقت
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # التعديل هنا: نرسل حرف "n" للأمر لكي لا يطلب تحميل الجافا مرة أخرى
-        echo "n" | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+        # بناء المشروع الآن لن يطلب أي مدخلات لأنه يعرف المسارات
+        bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
     - name: Sign APK
       run: |
-        # توقيع التطبيق
         jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
     - name: Upload APK Artifact
