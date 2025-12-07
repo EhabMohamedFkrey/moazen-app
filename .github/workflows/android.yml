@@ -1,4 +1,4 @@
-name: Build Android APK (Magic Method)
+name: Build Android APK (Final Magic)
 
 on:
   push:
@@ -12,6 +12,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      # استخدام جافا 11 (الأفضل لأندرويد 11)
       - name: Setup Java 11
         uses: actions/setup-java@v4
         with:
@@ -26,59 +27,61 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      # هذه هي الخطوة السحرية: إنشاء مشروع جديد تماماً ونقل ملفاتك إليه
-      - name: Create Fresh Project & Inject Your Code
+      # إنشاء المشروع من الصفر وتجاهل ملفات الإعدادات القديمة تماماً
+      - name: Create Project & Build
         run: |
-          # 1. إنشاء مشروع كوردوفا جديد ونظيف في مجلد مؤقت
-          echo "Creating a fresh App..."
+          # 1. إنشاء مشروع جديد
+          echo "Creating fresh project..."
           cordova create temp_app com.ehab.moazen "المؤذن"
-          
-          # 2. الدخول للمجلد الجديد
           cd temp_app
           
-          # 3. إضافة منصة أندرويد (نسخة 11 المستقرة جداً والتي تقبل كل الإضافات)
-          # نبتعد عن نسخة 13 المعقدة حالياً
+          # 2. إضافة أندرويد 11 (المستقر والمتسامح مع الأخطاء)
+          echo "Adding Android Platform..."
           cordova platform add android@11.0.0
           
-          # 4. تثبيت الإضافات يدوياً (واحدة تلو الأخرى) لضمان عدم وجود أخطاء
-          echo "Installing Plugins..."
+          # 3. تثبيت الإضافات من المتجر الرسمي (NPM) لضمان عدم وجود روابط مكسورة
+          echo "Installing Plugins from NPM..."
           cordova plugin add cordova-plugin-device
           cordova plugin add cordova-plugin-dialogs
           cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-plugin-android-permissions
-          # إضافة الإشعارات (نسخة تيم بروسل)
-          cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git
           
-          # 5. المهمة الحاسمة: نسخ ملفاتك (HTML/CSS/JS/MP3) إلى المشروع الجديد
-          # نقوم بحذف محتوى www الافتراضي للمشروع الجديد واستبداله بملفاتك
+          # تثبيت إضافة الإشعارات الرسمية (ستعمل بنجاح لأننا نستخدم أندرويد 11)
+          cordova plugin add cordova-plugin-local-notification
+          
+          # 4. حذف الملفات الافتراضية للمشروع الجديد
           rm -rf www/*
           
-          # نعود للمجلد الرئيسي لنسخ ملفاتك
+          # 5. نسخ ملفاتك أنت إلى داخل المشروع الجديد
+          echo "Copying your files..."
           cd ..
           
-          # نتأكد من مكان ملفاتك (سواء كانت في www أو في الجذر) وننسخها
-          if [ -d "www" ]; then
-            cp -r www/* temp_app/www/
+          # التحقق من مكان ملفاتك ونسخها
+          if [ -d "www" ] && [ "$(ls -A www)" ]; then
+             cp -r www/* temp_app/www/
           else
-            # في حال كانت ملفاتك مبعثرة في الخارج
-            cp index.html temp_app/www/ 2>/dev/null || true
-            cp style.css temp_app/www/ 2>/dev/null || true
-            cp script.js temp_app/www/ 2>/dev/null || true
-            cp adhan.mp3 temp_app/www/ 2>/dev/null || true
-            cp sw.js temp_app/www/ 2>/dev/null || true
-            cp manifest.json temp_app/www/ 2>/dev/null || true
+             # في حال كانت الملفات في الجذر مباشرة
+             cp index.html temp_app/www/ 2>/dev/null || true
+             cp style.css temp_app/www/ 2>/dev/null || true
+             cp script.js temp_app/www/ 2>/dev/null || true
+             cp adhan.mp3 temp_app/www/ 2>/dev/null || true
+             cp sw.js temp_app/www/ 2>/dev/null || true
+             cp manifest.json temp_app/www/ 2>/dev/null || true
+             
+             # نسخ مجلد الصور إذا وجد
+             [ -d "images" ] && cp -r images temp_app/www/ || true
+             [ -d "img" ] && cp -r img temp_app/www/ || true
+             [ -d "audio" ] && cp -r audio temp_app/www/ || true
           fi
           
-          # 6. بناء التطبيق من داخل المجلد الجديد
-          echo "Building APK..."
+          # 6. العودة للمجلد وبناء التطبيق
           cd temp_app
+          
+          echo "Building APK..."
           cordova build android --debug --device
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Moazen-App
-          # لاحظ المسار الجديد لأنه داخل temp_app
           path: temp_app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-
