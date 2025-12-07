@@ -19,7 +19,8 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Setup Java (JDK)
+    # نحتاج الجافا هنا فقط من أجل أوامر keytool و jarsigner في الأسفل
+    - name: Setup Java for Signing
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
@@ -28,20 +29,17 @@ jobs:
     - name: Install Bubblewrap CLI
       run: npm install -g @bubblewrap/cli
 
-    - name: Configure Bubblewrap Paths
+    - name: Build APK
       run: |
-        # هذه الخطوة هي الحل: ننشئ ملف إعدادات نخبر فيه الأداة بمسارات الأدوات الموجودة في السيرفر
-        mkdir -p $HOME/.bubblewrap
-        echo "{\"jdkPath\": \"$JAVA_HOME\", \"androidSdkPath\": \"$ANDROID_SDK_ROOT\"}" > $HOME/.bubblewrap/config.json
-        echo "تم تكوين مسارات الجافا والأندرويد بنجاح"
+        # حذف أي إعدادات سابقة قد تكون فاسدة
+        rm -rf $HOME/.bubblewrap
 
-    - name: Initialize Android Project
-      run: |
-        # إنشاء ملف مفاتيح توقيع مؤقت
+        # إنشاء مفاتيح التوقيع
         keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
         
-        # بناء المشروع الآن لن يطلب أي مدخلات لأنه يعرف المسارات
-        bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+        # الأمر السحري: نستخدم "yes" للموافقة على تحميل JDK و Android SDK تلقائياً
+        # سيقوم بتحميل أدواته الخاصة وسيعمل بنجاح بإذن الله
+        yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
 
     - name: Sign APK
       run: |
