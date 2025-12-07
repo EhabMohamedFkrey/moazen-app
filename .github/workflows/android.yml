@@ -30,40 +30,57 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Clean & Fix Dependencies
+      # هذه هي الخطوة السحرية التي تحل المشكلة دون كسر ملف JSON
+      - name: Fix package.json safely
         run: |
-          # 1. تنظيف عميق للمشروع
+          # تنظيف الملفات القديمة
           rm -rf node_modules package-lock.json plugins platforms
           
-          # 2. حذف سطر الإضافة القديمة تماماً من package.json لمنع أي خطأ في التحميل
-          # هذا الأمر يحذف أي سطر يحتوي على اسم الإضافة
-          sed -i '/cordova-plugin-local-notification/d' package.json
+          # استخدام Node.js لتعديل الملف بذكاء وحذف الإضافة المعطوبة دون ترك فواصل زائدة
+          node -e "
+            const fs = require('fs');
+            try {
+              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+              // حذف إضافة الإشعارات القديمة من dependencies
+              if (pkg.dependencies) {
+                delete pkg.dependencies['cordova-plugin-local-notification'];
+              }
+              // حذفها من إعدادات كوردوفا أيضاً لتجنب أي تعارض
+              if (pkg.cordova && pkg.cordova.plugins) {
+                delete pkg.cordova.plugins['cordova-plugin-local-notification'];
+              }
+              // حفظ الملف بتنسيق سليم تماماً
+              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+              console.log('Successfully cleaned package.json');
+            } catch (e) {
+              console.error('Error fixing package.json:', e);
+              process.exit(1);
+            }
+          "
           
-          # 3. التأكد من وجود مجلد www
+          # التأكد من وجود مجلد www
           if [ ! -d "www" ]; then
              mkdir www
-             # إنشاء ملف تجريبي إذا كان المجلد فارغاً لتجنب الخطأ
-             echo "<html><body>App</body></html>" > www/index.html
           fi
-
-          # 4. إنشاء مجلد الأيقونات
+          
+          # إنشاء مجلد الأيقونات
           mkdir -p res/android/icon/
           touch res/android/icon/ldpi.png
 
-      - name: Install Base Dependencies
-        run: npm install
-
-      - name: Install Fixed Notification Plugin
+      - name: Install Dependencies
         run: |
-          # تثبيت النسخة السليمة يدوياً وبشكل نظيف
-          cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git --save
+          # تثبيت المكتبات الأساسية (الآن الملف سليم ولن يحدث خطأ JSON)
+          npm install
+          
+          # تثبيت نسخة الإشعارات السليمة (TimBrussel) المتوافقة مع أندرويد 13
+          cordova plugin add https://github.com/timbrussel/cordova-plugin-local-notifications.git
 
       - name: Add Android Platform
         run: cordova platform add android@13.0.0 --force
 
       - name: Build APK
         run: |
-          # إضافة أعلام Gradle لحل مشاكل التوافق القديمة (AndroidX)
+          # استخدام أعلام Gradle لحل مشاكل AndroidX و Jetifier
           cordova build android --debug --device -- --gradleArg=-Pandroid.useAndroidX=true --gradleArg=-Pandroid.enableJetifier=true
 
       - name: Upload APK
