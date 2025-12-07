@@ -7,7 +7,7 @@
   "themeColor": "#d4af37",
   "navigationColor": "#141E30",
   "backgroundColor": "#141E30",
-  "startUrl": "/",
+  "startUrl": "https://moazen-app.netlify.app/",
   "iconUrl": "https://raw.githubusercontent.com/EhabMohamedFkrey/moazen-app/main/icon512.png",
   "maskableIconUrl": "https://raw.githubusercontent.com/EhabMohamedFkrey/moazen-app/main/icon512.png",
   "appVersion": "1.0.0",
