@@ -4043,3 +4043,92 @@ if ('serviceWorker' in navigator) {
         LoaderManager.hide();
     }, 1500);
 });
+
+// ==================== تكامل النظام الأصلي (Native Integration) ====================
+
+// دالة لجدولة الإشعارات باستخدام إضافة Capacitor
+async function scheduleNativeNotifications() {
+    // التحقق من وجود كاباسيتور
+    if (typeof Capacitor === 'undefined') return;
+
+    const { LocalNotifications } = Capacitor.Plugins;
+
+    // 1. طلب إذن الإشعارات
+    const perm = await LocalNotifications.requestPermissions();
+    if (perm.display !== 'granted') return;
+
+    // 2. إلغاء الإشعارات القديمة
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+        await LocalNotifications.cancel(pending);
+    }
+
+    if (!AppState.times) return;
+
+    const notifications = [];
+    let idCounter = 1;
+    const now = new Date();
+
+    // 3. تجهيز الإشعارات للصلوات القادمة
+    Constants.prayerKeys.forEach(key => {
+        if (key === 'Sunrise') return; // لا نؤذن للشروق
+
+        const timeStr = AppState.times[key]; // "15:30"
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        
+        const scheduleDate = new Date();
+        scheduleDate.setHours(hours, minutes, 0);
+
+        // إذا كان الوقت قد فات اليوم، نجدولها لغدٍ (أو نتجاهلها حالياً للتبسيط)
+        if (scheduleDate <= now) {
+            scheduleDate.setDate(scheduleDate.getDate() + 1);
+        }
+
+        notifications.push({
+            id: idCounter++,
+            title: "حان وقت الصلاة",
+            body: `حي على الصلاة: موعد صلاة ${Constants.prayerNames[key]}`,
+            schedule: { at: scheduleDate },
+            sound: "adhan.mp3", // سيعمل لأننا نسخنا الملف في android.yml
+            smallIcon: "ic_stat_icon_config_sample", // أيقونة افتراضية
+            actionTypeId: "",
+            extra: null
+        });
+    });
+
+    // 4. تنفيذ الجدولة
+    if (notifications.length > 0) {
+        await LocalNotifications.schedule({ notifications });
+        console.log('تم جدولة الصلوات بنجاح للنظام');
+        // عرض رسالة للمستخدم مرة واحدة فقط
+        // NotificationManager.show("تم تفعيل الأذان في الخلفية");
+    }
+}
+
+// دالة لطلب إذن الموقع بشكل صريح عند الفتح
+async function requestNativeLocation() {
+    if (typeof Capacitor !== 'undefined' && Capacitor.Plugins.Geolocation) {
+        try {
+            const permission = await Capacitor.Plugins.Geolocation.requestPermissions();
+            if(permission.location === 'granted') {
+                CityManager.detectLocation(); // استدعاء دالتك الأصلية
+            }
+        } catch (e) {
+            console.error("خطأ في طلب إذن الموقع", e);
+        }
+    }
+}
+
+// استدعاء الدوال الجديدة عند بدء التشغيل
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        requestNativeLocation(); // طلب الموقع فوراً
+    }, 2000);
+});
+
+// تحديث الجدولة كلما تم تحديث المواقيت
+const originalRenderHome = PrayerManager.renderHome;
+PrayerManager.renderHome = function() {
+    originalRenderHome(); // تنفيذ الكود القديم
+    scheduleNativeNotifications(); // إضافة الجدولة الجديدة
+};
