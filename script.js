@@ -4044,91 +4044,112 @@ if ('serviceWorker' in navigator) {
     }, 1500);
 });
 
-// ==================== تكامل النظام الأصلي (Native Integration) ====================
+// ==================== التكامل الاحترافي مع النظام (Native Integration V2) ====================
 
-// دالة لجدولة الإشعارات باستخدام إضافة Capacitor
+document.addEventListener('DOMContentLoaded', async () => {
+    // ننتظر قليلاً لضمان تحميل كاباسيتور
+    setTimeout(async () => {
+        if (typeof Capacitor !== 'undefined') {
+            await initAndroidPermissions();
+            await setupNotificationChannel();
+        }
+    }, 1000);
+});
+
+// 1. دالة تهيئة القنوات (هذا هو سر تشغيل الصوت في الخلفية)
+async function setupNotificationChannel() {
+    const { LocalNotifications } = Capacitor.Plugins;
+    
+    // أندرويد يتطلب إنشاء "قناة" لتشغيل صوت مخصص
+    // بدون هذه الخطوة، سيعمل الإشعار بصوت النظام الافتراضي أو بدون صوت
+    await LocalNotifications.createChannel({
+        id: 'moazen_channel', // معرف القناة
+        name: 'تنبيهات الأذان',
+        description: 'إشعارات بصوت الأذان للصلاة',
+        importance: 5, // 5 تعني أهمية قصوى (صوت + اهتزاز + ظهور فوق التطبيقات)
+        visibility: 1,
+        sound: 'adhan.mp3', // الاسم كما هو في مجلد raw
+        vibration: true
+    });
+    
+    console.log("تم إنشاء قناة الأذان بنجاح");
+}
+
+// 2. دالة طلب الأذونات (موقع + إشعارات) دفعة واحدة
+async function initAndroidPermissions() {
+    const { Geolocation, LocalNotifications } = Capacitor.Plugins;
+
+    try {
+        // طلب إذن الإشعارات
+        const notifs = await LocalNotifications.requestPermissions();
+        
+        // طلب إذن الموقع (بدقة عالية)
+        const geo = await Geolocation.requestPermissions();
+        
+        if (geo.location === 'granted' || geo.coarseLocation === 'granted') {
+            // إذا وافق المستخدم، نحدث الموقع فوراً
+            CityManager.detectLocation();
+        } else {
+            NotificationManager.show("يجب تفعيل الموقع لحساب المواقيت بدقة", true);
+        }
+    } catch (e) {
+        console.error("خطأ في طلب الأذونات:", e);
+    }
+}
+
+// 3. دالة الجدولة المحدثة (تستخدم القناة الجديدة)
 async function scheduleNativeNotifications() {
-    // التحقق من وجود كاباسيتور
     if (typeof Capacitor === 'undefined') return;
+    if (!AppState.times) return;
 
     const { LocalNotifications } = Capacitor.Plugins;
-
-    // 1. طلب إذن الإشعارات
-    const perm = await LocalNotifications.requestPermissions();
-    if (perm.display !== 'granted') return;
-
-    // 2. إلغاء الإشعارات القديمة
+    
+    // تنظيف القديم
     const pending = await LocalNotifications.getPending();
     if (pending.notifications.length > 0) {
         await LocalNotifications.cancel(pending);
     }
 
-    if (!AppState.times) return;
-
     const notifications = [];
     let idCounter = 1;
     const now = new Date();
 
-    // 3. تجهيز الإشعارات للصلوات القادمة
     Constants.prayerKeys.forEach(key => {
-        if (key === 'Sunrise') return; // لا نؤذن للشروق
+        if (key === 'Sunrise') return; 
 
-        const timeStr = AppState.times[key]; // "15:30"
+        const timeStr = AppState.times[key];
         const [hours, minutes] = timeStr.split(':').map(Number);
         
         const scheduleDate = new Date();
         scheduleDate.setHours(hours, minutes, 0);
 
-        // إذا كان الوقت قد فات اليوم، نجدولها لغدٍ (أو نتجاهلها حالياً للتبسيط)
+        // جدولة لليوم التالي إذا فات الوقت
         if (scheduleDate <= now) {
             scheduleDate.setDate(scheduleDate.getDate() + 1);
         }
 
         notifications.push({
             id: idCounter++,
-            title: "حان وقت الصلاة",
-            body: `حي على الصلاة: موعد صلاة ${Constants.prayerNames[key]}`,
+            title: `حان وقت صلاة ${Constants.prayerNames[key]}`,
+            body: "حي على الصلاة، حي على الفلاح",
             schedule: { at: scheduleDate },
-            sound: "adhan.mp3", // سيعمل لأننا نسخنا الملف في android.yml
-            smallIcon: "ic_stat_icon_config_sample", // أيقونة افتراضية
+            channelId: 'moazen_channel', // <--- هام جداً: الربط بالقناة التي أنشأناها
+            sound: 'adhan.mp3',
+            smallIcon: 'ic_stat_icon_config_sample',
             actionTypeId: "",
             extra: null
         });
     });
 
-    // 4. تنفيذ الجدولة
     if (notifications.length > 0) {
         await LocalNotifications.schedule({ notifications });
-        console.log('تم جدولة الصلوات بنجاح للنظام');
-        // عرض رسالة للمستخدم مرة واحدة فقط
-        // NotificationManager.show("تم تفعيل الأذان في الخلفية");
+        console.log(`تم جدولة ${notifications.length} صلاة في النظام`);
     }
 }
 
-// دالة لطلب إذن الموقع بشكل صريح عند الفتح
-async function requestNativeLocation() {
-    if (typeof Capacitor !== 'undefined' && Capacitor.Plugins.Geolocation) {
-        try {
-            const permission = await Capacitor.Plugins.Geolocation.requestPermissions();
-            if(permission.location === 'granted') {
-                CityManager.detectLocation(); // استدعاء دالتك الأصلية
-            }
-        } catch (e) {
-            console.error("خطأ في طلب إذن الموقع", e);
-        }
-    }
-}
-
-// استدعاء الدوال الجديدة عند بدء التشغيل
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        requestNativeLocation(); // طلب الموقع فوراً
-    }, 2000);
-});
-
-// تحديث الجدولة كلما تم تحديث المواقيت
-const originalRenderHome = PrayerManager.renderHome;
+// ربط الجدولة بتحديث الواجهة
+const originalRenderHome2 = PrayerManager.renderHome;
 PrayerManager.renderHome = function() {
-    originalRenderHome(); // تنفيذ الكود القديم
-    scheduleNativeNotifications(); // إضافة الجدولة الجديدة
+    originalRenderHome2(); 
+    scheduleNativeNotifications(); 
 };
