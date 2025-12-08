@@ -28,38 +28,21 @@ jobs:
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
 
-    - name: Initialize Bubblewrap
-      run: |
-        rm -rf $HOME/.bubblewrap
-        # إنشاء المفاتيح
-        keytool -genkeypair -v \
-          -keystore android.keystore \
-          -keyalg RSA -keysize 2048 \
-          -validity 10000 \
-          -alias android \
-          -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" \
-          -storepass password \
-          -keypass password
-
     - name: Build APK
       run: |
-        # بناء التطبيق مع التوقيع
-        bubblewrap build \
-          --manifest=twa-manifest.json \
-          --skipPwaValidation \
-          --key=android.keystore \
-          --alias=android \
-          --key-pass=pass:password \
-          --store-pass=pass:password
-
-    - name: Find and Upload APK
-      run: |
-        # البحث عن الملف الناتج
-        APK_FILE=$(find . -name "*.apk" -type f | head -1)
-        echo "APK file found: $APK_FILE"
+        # تنظيف أي بقايا
+        rm -rf $HOME/.bubblewrap
         
-        # نسخ الملف إلى اسم ثابت
-        cp "$APK_FILE" app-release-signed.apk
+        # إنشاء المفاتيح
+        keytool -genkeypair -v -keystore android.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias android -dname "CN=Moazen, OU=IT, O=MoazenApp, L=Cairo, S=Cairo, C=EG" -storepass password -keypass password
+        
+        # الأمر السحري مع الروابط الجديدة
+        # سيقوم بتحميل الأدوات وبناء التطبيق
+        yes | bubblewrap build --manifest=twa-manifest.json --skipPwaValidation
+
+    - name: Sign APK
+      run: |
+        jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore android.keystore -storepass password -keypass password app-release-signed.apk android
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
