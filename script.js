@@ -3651,7 +3651,7 @@ const SetupManager = {
         }, 500);
     },
 
-    useGPS: () => {
+        useGPS: () => {
         const display = document.getElementById('selected-location-display');
         display.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...';
 
@@ -3662,21 +3662,43 @@ const SetupManager = {
                     const lng = position.coords.longitude;
 
                     let name = "موقعي الحالي";
+                    let countryCode = ""; // متغير لمعرفة كود الدولة
+
                     try {
                         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
                         const data = await res.json();
-                        name = data.address.city || data.address.town || data.address.village || "موقعي الحالي";
-                    } catch(e) {}
+                        
+                        // 1. إصلاح مشكلة الاسم (إضافة الدولة)
+                        const city = data.address.city || data.address.town || data.address.village || data.address.county || "موقع غير معروف";
+                        const country = data.address.country || "";
+                        name = country ? `${city}، ${country}` : city;
+
+                        // نحفظ كود الدولة (مثل eg لمصر)
+                        countryCode = data.address.country_code; 
+
+                    } catch(e) {
+                        console.error(e);
+                    }
+
+                    // 2. إصلاح مشكلة الوقت (الذكاء الاصطناعي لتحديد الطريقة)
+                    // إذا اكتشفنا أن المستخدم في مصر، نغير طريقة الحساب لرقم 5 تلقائياً
+                    if (countryCode === 'eg') {
+                        const methodSelect = document.getElementById('setup-method');
+                        if(methodSelect) {
+                            methodSelect.value = "5"; // 5 = الهيئة المصرية
+                            NotificationManager.show("تم ضبط التوقيت تلقائياً لمصر 🇪🇬");
+                        }
+                    }
 
                     // نحدد أن المستخدم استخدم GPS (isGPS: true)
                     SetupManager.selectedCityData = { name, lat, lng, isGPS: true };
                     
                     document.getElementById('city-search').value = name;
-                    display.innerHTML = `<i class="fas fa-satellite-dish"></i> تم تحديد الموقع بنجاح`;
-                    NotificationManager.show("تم التقاط الموقع بنجاح");
+                    display.innerHTML = `<i class="fas fa-satellite-dish"></i> تم تحديد: ${name}`;
+                    // NotificationManager.show("تم التقاط الموقع بنجاح");
                 },
                 (err) => {
-                    display.innerHTML = '<span style="color:#ff4444">فشل تحديد الموقع، ابحث بالاسم</span>';
+                    display.innerHTML = '<span style="color:#ff4444">فشل تحديد الموقع، تأكد من الـ GPS</span>';
                 },
                 { enableHighAccuracy: true }
             );
@@ -3685,34 +3707,49 @@ const SetupManager = {
         }
     },
 
-    finish: () => {
+
+        finish: () => {
+        // التحقق من تحديد الموقع
         if (!SetupManager.selectedCityData) {
             NotificationManager.show("من فضلك حدد موقعك أولاً!", true);
             return;
         }
 
-        // 1. حفظ الموقع وطريقة الحساب
-        const method = parseInt(document.getElementById('setup-method').value);
+        // ==========================================
+        // 1. الحل الجذري: نأخذ طريقة الحساب ونحدثها فوراً في الذاكرة
+        // ==========================================
+        const selectedMethodID = parseInt(document.getElementById('setup-method').value);
+        
+        // تحديث المتغير الحي فوراً (هذا ما كان ينقص)
+        AppState.method = selectedMethodID;
+
+        // حفظ الطريقة في التخزين الدائم لضمان بقائها بعد الخروج
+        localStorage.setItem('calculationMethod', selectedMethodID);
+
+        // ==========================================
+
+        // 2. حفظ بيانات الموقع
         CityManager.saveLocation(
             SetupManager.selectedCityData.name,
             SetupManager.selectedCityData.lat,
             SetupManager.selectedCityData.lng,
-            method
+            selectedMethodID
         );
         
-        // 2. ربط إعدادات الصوت (الخطوة الناقصة سابقاً)
+        // 3. التعامل مع إعدادات الصوت
         const isSoundOn = document.getElementById('setup-sound-toggle').checked;
-        
-        // إذا فعل الصوت في البداية، نلغي الكتم ونفعل الأذان والنقرات
         AppState.isMuted = !isSoundOn; 
         localStorage.setItem('isMuted', !isSoundOn);
         localStorage.setItem('adhanToggle', isSoundOn);
         localStorage.setItem('clickToggle', isSoundOn);
-        // نفعل التنبيهات والطقس افتراضياً
+        
+        // تفعيل الإعدادات الأساسية افتراضياً
         localStorage.setItem('notificationToggle', 'true');
         localStorage.setItem('weatherToggle', 'true');
+        AppState.notifications = true; // تحديث فوري
+        AppState.weatherEnabled = true; // تحديث فوري
 
-        // 3. ربط إعداد GPS (الخطوة الناقصة سابقاً)
+        // 4. التعامل مع إعداد GPS
         if(SetupManager.selectedCityData.isGPS) {
             localStorage.setItem('geolocationToggle', 'true');
             AppState.geolocationEnabled = true;
@@ -3721,25 +3758,24 @@ const SetupManager = {
             AppState.geolocationEnabled = false;
         }
 
-        // 4. إغلاق النافذة
+        // 5. إغلاق النافذة وتطبيق الثيم
         document.getElementById('setup-modal').style.display = 'none';
         
-        // 5. تطبيق الثيم المختار
         const selectedThemeEl = document.querySelector('#setup-theme-grid .theme-option.active');
         if(selectedThemeEl) {
             ThemeManager.change(selectedThemeEl.dataset.theme);
         }
 
-        // 6. خطوة مهمة جداً: إعادة تحميل الإعدادات لتحديث الواجهة بناءً على ما تم حفظه
+        // 6. تحميل باقي الإعدادات (للتأكيد)
         SettingsManager.load();
 
-        // 7. جلب البيانات النهائية
+        // 7. جلب البيانات (الآن سيستخدم AppState.method المحدث = الهيئة المصرية)
         PrayerManager.fetchData();
+        
         NotificationManager.show("تم إعداد التطبيق بنجاح! 🚀");
         SoundManager.playClick();
     }
 };
-
 
 
 
