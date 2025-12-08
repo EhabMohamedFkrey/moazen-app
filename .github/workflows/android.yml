@@ -1,0 +1,51 @@
+name: Build Android App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source (سحب الملفات)
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js (تجهيز البيئة)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (تثبيت الأدوات)
+        run: npm install
+
+      - name: Prepare Web Assets (تجهيز ملفات الموقع)
+        run: |
+          mkdir www
+          cp -r *.html *.css *.js *.json *.png *.mp3 www/ || true
+
+      - name: Initialize Capacitor (تشغيل محول التطبيقات)
+        run: |
+          npx cap add android
+
+      - name: Setup Java (تجهيز جافا للأندرويد)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build APK (بناء ملف التطبيق)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK (رفع التطبيق للتحميل)
+        uses: actions/upload-artifact@v3
+        with:
+          name: Moazen-App
+          path: android/app/build/outputs/apk/debug/app-debug.apk
