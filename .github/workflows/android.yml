@@ -33,12 +33,32 @@ jobs:
           npx cap add android
           npx cap sync
 
-      # خطوة سحرية: نسخ صوت الأذان لمجلدات النظام ليصبح صوتاً للإشعار
+      # === (1) خطوة جديدة: حقن الأذونات بالقوة في ملف الهوية ===
+      # هذه الخطوة ستجبر إعدادات الهاتف على إظهار خيار الموقع
+      # وستطلب إذن المنبه الدقيق لحل مشكلة التأخير
+      - name: Inject Permissions into Manifest
+        run: |
+          # إضافة إذن الموقع الدقيق والتقريبي
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
+          
+          # إضافة إذن الخصائص الجغرافية لضمان ظهور التطبيق في المتاجر
+          sed -i '/<application/i \    <uses-feature android:name="android.hardware.location.gps" />' android/app/src/main/AndroidManifest.xml
+          
+          # إضافة إذن التنبيه الدقيق (لحل مشكلة تأخير الدقيقتين)
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />' android/app/src/main/AndroidManifest.xml
+          
+          # إضافة إذن إبقاء الشاشة مضيئة أثناء الأذان
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.WAKE_LOCK" />' android/app/src/main/AndroidManifest.xml
+          
+          echo "تم حقن الأذونات بنجاح في ملف Manifest"
+
+      # === (2) خطوة الصوت (كما هي صحيحة) ===
       - name: Inject Sound File
         run: |
           mkdir -p android/app/src/main/res/raw
           cp adhan.mp3 android/app/src/main/res/raw/adhan.mp3
-          echo "Sound file injected successfully"
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -55,5 +75,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Moazen-Pro-App
+          name: Moazen-Pro-App-Final
           path: android/app/build/outputs/apk/debug/app-debug.apk
