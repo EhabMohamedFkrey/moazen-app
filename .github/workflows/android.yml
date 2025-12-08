@@ -33,49 +33,39 @@ jobs:
           npx cap add android
           npx cap sync
 
-      # === (1) خطوة الأيقونات: استبدال الأيقونات الافتراضية بأيقونتك ===
-      - name: Inject Custom Icons
+      # === (1) خطوة الأيقونات الشاملة (الحل الجذري) ===
+      - name: Brute Force Icons & Splash
         run: |
-          # تحديد مسار الموارد في الأندرويد
-          RES_DIR="android/app/src/main/res"
+          # تحديد مسار الموارد
+          RES="android/app/src/main/res"
           
-          # نسخ أيقونتك (icon512.png) واستبدال الأيقونة الافتراضية في كل الأحجام
-          # نقوم بهذا التكرار لضمان ظهورها على كل أنواع الشاشات
-          cp icon512.png $RES_DIR/mipmap-mdpi/ic_launcher.png
-          cp icon512.png $RES_DIR/mipmap-hdpi/ic_launcher.png
-          cp icon512.png $RES_DIR/mipmap-xhdpi/ic_launcher.png
-          cp icon512.png $RES_DIR/mipmap-xxhdpi/ic_launcher.png
-          cp icon512.png $RES_DIR/mipmap-xxxhdpi/ic_launcher.png
+          # الدوران على جميع مجلدات الأحجام المختلفة
+          for folder in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+            # 1. استبدال الأيقونة القديمة
+            cp icon512.png $RES/$folder/ic_launcher.png
+            # 2. استبدال الأيقونة الدائرية
+            cp icon512.png $RES/$folder/ic_launcher_round.png
+            # 3. (الأهم) استبدال واجهة الأيقونة الحديثة
+            cp icon512.png $RES/$folder/ic_launcher_foreground.png
+          done
           
-          # نسخ الأيقونة الدائرية أيضاً
-          cp icon512.png $RES_DIR/mipmap-mdpi/ic_launcher_round.png
-          cp icon512.png $RES_DIR/mipmap-hdpi/ic_launcher_round.png
-          cp icon512.png $RES_DIR/mipmap-xhdpi/ic_launcher_round.png
-          cp icon512.png $RES_DIR/mipmap-xxhdpi/ic_launcher_round.png
-          cp icon512.png $RES_DIR/mipmap-xxxhdpi/ic_launcher_round.png
-          
-          echo "تم تغيير أيقونات التطبيق بنجاح"
+          echo "تم استبدال جميع طبقات الأيقونات بنجاح"
 
-      # === (2) خطوة الأذونات: حل مشكلة الموقع الجغرافي ===
+      # === (2) خطوة الأذونات (كما هي) ===
       - name: Inject Permissions into Manifest
         run: |
-          # حقن أذونات الموقع بالقوة
           sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i \    <uses-feature android:name="android.hardware.location.gps" />' android/app/src/main/AndroidManifest.xml
-          
-          # حقن أذونات التنبيه الدقيق (لحل تأخير الإشعارات)
           sed -i '/<application/i \    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i \    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />' android/app/src/main/AndroidManifest.xml
-          
-          echo "تم حقن الأذونات في ملف Manifest"
+          echo "تم حقن الأذونات"
 
-      # === (3) خطوة الصوت: حل مشكلة صوت الأذان ===
+      # === (3) خطوة الصوت (كما هي) ===
       - name: Inject Sound File
         run: |
           mkdir -p android/app/src/main/res/raw
           cp adhan.mp3 android/app/src/main/res/raw/adhan.mp3
-          echo "Sound file injected successfully"
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -92,5 +82,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Moazen-Pro-App-V2
+          name: Moazen-Final-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
