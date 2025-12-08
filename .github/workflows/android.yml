@@ -12,40 +12,48 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout Source (سحب الملفات)
+      - name: Checkout Source
         uses: actions/checkout@v3
 
-      - name: Setup Node.js (تجهيز البيئة)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies (تثبيت الأدوات)
+      - name: Install Dependencies
         run: npm install
 
-      - name: Prepare Web Assets (تجهيز ملفات الموقع)
+      - name: Prepare Web Assets
         run: |
           mkdir www
           cp -r *.html *.css *.js *.json *.png *.mp3 www/ || true
 
-      - name: Initialize Capacitor (تشغيل محول التطبيقات)
+      - name: Initialize Capacitor
         run: |
           npx cap add android
+          npx cap sync
 
-      - name: Setup Java (تجهيز جافا للأندرويد)
+      # خطوة سحرية: نسخ صوت الأذان لمجلدات النظام ليصبح صوتاً للإشعار
+      - name: Inject Sound File
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          cp adhan.mp3 android/app/src/main/res/raw/adhan.mp3
+          echo "Sound file injected successfully"
+
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Build APK (بناء ملف التطبيق)
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK (رفع التطبيق للتحميل)
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Moazen-App
+          name: Moazen-Pro-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
